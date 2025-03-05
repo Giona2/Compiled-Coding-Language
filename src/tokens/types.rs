@@ -1,3 +1,6 @@
+use super::keyword_names;
+
+
 pub enum Keywords {
     FUNCTION,
 }
@@ -12,8 +15,8 @@ pub enum DataType {
 
 } impl DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { match word_to_check {
-        "int" => Some(Self::INTEGER),
-            _ => None
+        keyword_names::types::INTEGER => Some(Self::INTEGER),
+                                    _ => None
     }}
 }
 

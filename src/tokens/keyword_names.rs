@@ -1,3 +1,3 @@
-pub mod type_names {
+pub mod types {
     pub const INTEGER: &str = "int";
 }
