@@ -14,13 +14,32 @@ pub enum DataType {
 
 
 #[macro_export]
-// equation!("3", ADD, "4")
-// equation!(equation!("3", ADD, "4"), MULTIPLY, "4")
 macro_rules! equation  {
-    ($first_constant:ident, $operation:ident, $second_constant:ident) => {
+    ($first_term:literal, $operation:ident, $second_term:literal) => {
         Box::new(Assignment::$operation((
-            Box::new(Assignment::$first_constant),
-            Box::new(Assignment::$second_constant),
+            Box::new(Assignment::TERM($first_term.to_string())),
+            Box::new(Assignment::TERM($second_term.to_string())),
+        )))
+    };
+
+    ($first_term:expr, $operation:ident, $second_term:literal) => {
+        Box::new(Assignment::$operation((
+            $first_term,
+            Box::new(Assignment::TERM($second_term.to_string())),
+        )))
+    };
+
+    ($first_term:literal, $operation:ident, $second_term:expr) => {
+        Box::new(Assignment::$operation((
+            Box::new(Assignment::TERM($first_term.to_string())),
+            $second_term,
+        )))
+    };
+
+    ($first_term:expr, $operation:ident, $second_term:expr) => {
+        Box::new(Assignment::$operation((
+            $first_term,
+            $second_term,
         )))
     };
 }
@@ -28,8 +47,8 @@ macro_rules! equation  {
 #[derive(Debug)]
 pub enum Assignment {
     ADD((Box<Assignment>, Box<Assignment>)),
-    SUBTRACT((Box<Assignment>, Box<Assignment>)),
-    MULTIPLY((Box<Assignment>, Box<Assignment>)),
-    DIVIDE((Box<Assignment>, Box<Assignment>)),
+    SUB((Box<Assignment>, Box<Assignment>)),
+    MUL((Box<Assignment>, Box<Assignment>)),
+    DIV((Box<Assignment>, Box<Assignment>)),
     TERM(String),
 }

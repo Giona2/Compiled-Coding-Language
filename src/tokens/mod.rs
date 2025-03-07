@@ -89,4 +89,3 @@ pub struct SyntaxTree {
         }
     }
 }
-
