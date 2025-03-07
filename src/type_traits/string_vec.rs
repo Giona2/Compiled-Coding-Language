@@ -12,17 +12,17 @@ pub trait StringVecExtra {
     /// ```
     fn index_to_pattern(&self, index: usize, pattern: &str) -> Option<Vec<String>>;
 
-    /// Returns the index of the first instance of `pattern` after `index`
+    /// Returns the index of the first instance of `pattern` in this vector
     ///
     /// # Examples
     ///
     /// ```rust
-    /// let my_vec: Vec<String> = vec!["3".to_string(), "2".to_string(), "3".to_string(), "4".to_string()]
+    /// let my_vec: Vec<String> = vec!["2".to_string(), "3".to_string(), "4".to_string(), "3".to_string()]
     ///
-    /// // index_of_3_after_1 = 2
-    /// let index_of_3_after_1: Vec<String> = my_vec.forward_find(1, "3")
+    /// // index_of_3_after_1 = 1
+    /// let index_of_3: Vec<String> = my_vec.find("3")
     /// ```
-    fn forward_find(&self, index: usize, pattern: &str) -> Option<usize>;
+    fn find(&self, pattern: &str) -> Option<usize>;
 }
 
 impl StringVecExtra for Vec<String> {
@@ -43,7 +43,14 @@ impl StringVecExtra for Vec<String> {
         }
     }
 
-    fn forward_find(&self, index: usize, pattern: &str) -> Option<usize> {
-        todo!()
+    fn find(&self, pattern: &str) -> Option<usize> {
+        let mut result: Option<usize> = None;
+
+        // Find the first instance of the given pattern
+        for (i, element) in self.iter().enumerate() {
+            if element == pattern { result = Some(i); break; }
+        }
+
+        return result
     }
 }

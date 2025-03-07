@@ -77,12 +77,11 @@ pub struct SyntaxTree {
         let variables: Vec<String> = Vec::new();
 
         for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
-            println!("Current progress: {:?}", optimized_file_content[current_word_index..].iter());
             // Variable handling
             if keyword_names::types::get_type_names().contains(current_word) {
-                println!("Found a variable: {}", current_word);
-                let assignment = optimized_file_content.index_to_pattern(current_word_index, ";")
+                let full_declaration = optimized_file_content.index_to_pattern(current_word_index, ";")
                     .unwrap();
+                let equal_sign_index = full_declaration.find ;
 
                 let declaration = Declaration::new(
                     &optimized_file_content[current_word_index+1],
