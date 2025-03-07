@@ -5,7 +5,7 @@ pub trait StringVecExtra {
 impl StringVecExtra for Vec<String> {
     fn index_to_pattern(&self, index: usize, pattern: &str) -> Option<Vec<String>> {
         let mut index_of_pattern: Option<usize> = None;
-        for (i, element) in self.iter().enumerate() {
+        for (i, element) in self[index..].iter().enumerate() {
             if element == pattern { index_of_pattern = Some(i) }
         }
 
