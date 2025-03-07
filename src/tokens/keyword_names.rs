@@ -1,7 +1,8 @@
 pub mod types {
     pub fn get_type_names() -> Vec<String> { return vec![
-        "int".to_string(),
-    ]}
+        "int",
+
+    ].into_iter().map(|x| x.to_string()).collect()}
     pub const INTEGER: &str = "int";
 }
 
