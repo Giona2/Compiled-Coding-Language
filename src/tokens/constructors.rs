@@ -1,5 +1,6 @@
-use super::types::DataType;
 use super::Token;
+use super::types::Assignment;
+use super::types::DataType;
 
 
 #[derive(Debug)]
@@ -25,11 +26,12 @@ pub struct TerminatingLoop {}
 pub struct Declaration {
     name: String,
     data_type: DataType,
-    value: Option<String>,
+    value: Option<Assignment>,
+
 } impl Declaration {
-    pub fn new(name: &str, data_type: DataType, value: Option<&str>) -> Self { return Self {
+    pub fn new(name: &str, data_type: DataType, value: Option<Assignment>) -> Self { return Self {
         name: name.to_string(),
         data_type,
-        value: if let Some(unwrapped_value) = value { Some(unwrapped_value.to_string()) } else { None }
+        value,
     }}
 }

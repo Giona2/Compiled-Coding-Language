@@ -1,7 +1,5 @@
 use crate::type_traits::string_vec::StringVecExtra;
 
-use std::fmt::Display;
-
 
 pub mod constructors;
 
@@ -81,12 +79,15 @@ pub struct SyntaxTree {
             if keyword_names::types::get_type_names().contains(current_word) {
                 let full_declaration = optimized_file_content.index_to_pattern(current_word_index, ";")
                     .unwrap();
-                let equal_sign_index = full_declaration.find ;
+                let equal_sign_index = full_declaration.find("=").unwrap();
+
+                let string_assignment = full_declaration[equal_sign_index+1..full_declaration.len()-1].to_vec();
+                let assignment = Assignment::from_string_vec(string_assignment);
 
                 let declaration = Declaration::new(
                     &optimized_file_content[current_word_index+1],
                     DataType::check_token_type(current_word).unwrap(),
-                    Some(&optimized_file_content[current_word_index+3]),
+                    Some(assignment.unwrap()),
                 );
                 token_tree.push(Token::DECLARATION(declaration));
             }
