@@ -11,6 +11,18 @@ pub trait StringVecExtra {
     /// let vec_slice: Vec<String> = my_vec.index_to_pattern(1, "3")
     /// ```
     fn index_to_pattern(&self, index: usize, pattern: &str) -> Option<Vec<String>>;
+
+    /// Returns the index of the first instance of `pattern` after `index`
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let my_vec: Vec<String> = vec!["3".to_string(), "2".to_string(), "3".to_string(), "4".to_string()]
+    ///
+    /// // index_of_3_after_1 = 2
+    /// let index_of_3_after_1: Vec<String> = my_vec.forward_find(1, "3")
+    /// ```
+    fn forward_find(&self, index: usize, pattern: &str) -> Option<usize>;
 }
 
 impl StringVecExtra for Vec<String> {
@@ -29,5 +41,9 @@ impl StringVecExtra for Vec<String> {
         } else {
             return None
         }
+    }
+
+    fn forward_find(&self, index: usize, pattern: &str) -> Option<usize> {
+        todo!()
     }
 }
