@@ -2,22 +2,16 @@ use std::fs;
 
 
 mod tokens;
-    use tokens::Token;
+    use tokens::SyntaxTree;
+    use tokens::types::Assignment;
 
 fn main() {
-    let script_content_raw = fs::read_to_string("./syntax_example.txt")
-        .expect("Could not read");
-    let script_content_flattened = script_content_raw
-        .replace("\n", " ")
-        .replace("\t", " ");
-    let script_content_split: Vec<&str> = script_content_flattened
-        .split(" ")
-        .collect();
-    let script_content: Vec<&str> = script_content_split.into_iter()
-        .filter_map(|x| if x != "" {Some(x)} else {None})
-        .collect();
+    //let file_content: String = fs::read_to_string("./syntax_example.txt")
+    //    .expect("Failed to read file");
 
-    let mut syntax_tree: Vec<Token> = Vec::new();
+    //let optimized_file_content = SyntaxTree::optimize_file_content(&file_content);
+    //let syntax_tree = SyntaxTree::from_file_content(optimized_file_content);
+    //println!("Syntax tree: {:?}", syntax_tree);
 
-    for word in script_content {}
+    let x = equation!(TERM("3"), ADD, TERM("4"));
 }

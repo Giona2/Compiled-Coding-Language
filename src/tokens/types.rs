@@ -1,15 +1,7 @@
 use super::keyword_names;
 
 
-pub enum Keywords {
-    FUNCTION,
-}
-
-pub enum Syntax {
-    RCURLY,
-    LCURLY,
-}
-
+#[derive(Debug)]
 pub enum DataType {
     INTEGER,
 
@@ -20,3 +12,24 @@ pub enum DataType {
     }}
 }
 
+
+#[macro_export]
+// equation!("3", ADD, "4")
+// equation!(equation!("3", ADD, "4"), MULTIPLY, "4")
+macro_rules! equation  {
+    ($first_constant:ident, $operation:ident, $second_constant:ident) => {
+        Box::new(Assignment::$operation((
+            Box::new(Assignment::$first_constant),
+            Box::new(Assignment::$second_constant),
+        )))
+    };
+}
+
+#[derive(Debug)]
+pub enum Assignment {
+    ADD((Box<Assignment>, Box<Assignment>)),
+    SUBTRACT((Box<Assignment>, Box<Assignment>)),
+    MULTIPLY((Box<Assignment>, Box<Assignment>)),
+    DIVIDE((Box<Assignment>, Box<Assignment>)),
+    TERM(String),
+}
