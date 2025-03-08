@@ -6,6 +6,13 @@ pub mod types {
     pub const INTEGER: &str = "int";
 }
 
+pub mod math {
+    pub const ADD:      &str = "+";
+    pub const SUBTRACT: &str = "-";
+    pub const MULTIPLY: &str = "*";
+    pub const DIVIDE:   &str = "/";
+}
+
 pub fn get_syntax_chars() -> Vec<String> { return vec![
     "{",
     "}",

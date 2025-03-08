@@ -10,7 +10,6 @@ fn main() {
         .expect("Failed to read file");
 
     let optimized_file_content = SyntaxTree::optimize_file_content(&file_content);
-    println!("Optimized files content: {:?}", optimized_file_content);
     let syntax_tree = SyntaxTree::from_file_content(optimized_file_content);
-    println!("Syntax tree: {:?}", syntax_tree);
+    println!("syntax_tree: {:?}", syntax_tree);
 }

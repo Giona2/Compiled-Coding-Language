@@ -13,7 +13,6 @@ pub enum DataType {
 }
 
 
-
 /// Short-hand way to build an Assignment
 /// The suffix indicates the types you need to use for this specific variant
 ///     c: constant (a string litteral)
@@ -29,10 +28,10 @@ pub enum DataType {
 /// ```
 macro_rules! equation_cc {
     ($first_term:expr, $operation:ident, $second_term:expr) => {
-        Box::new(Assignment::$operation((
+        Box::new(Assignment::$operation(
             Box::new(Assignment::TERM($first_term.to_string())),
             Box::new(Assignment::TERM($second_term.to_string())),
-        )))
+        ))
     };
 }
 /// Short-hand way to build an Assignment
@@ -50,10 +49,10 @@ macro_rules! equation_cc {
 /// ```
 macro_rules! equation_ec {
     ($first_term:expr, $operation:ident, $second_term:expr) => {
-        Box::new(Assignment::$operation((
+        Box::new(Assignment::$operation(
             $first_term,
             Box::new(Assignment::TERM($second_term.to_string())),
-        )))
+        ))
     };
 }
 /// Short-hand way to build an Assignment
@@ -71,10 +70,10 @@ macro_rules! equation_ec {
 /// ```
 macro_rules! equation_ce {
     ($first_term:expr, $operation:ident, $second_term:expr) => {
-        Box::new(Assignment::$operation((
+        Box::new(Assignment::$operation(
             Box::new(Assignment::TERM($first_term.to_string())),
             $second_term,
-        )))
+        ))
     };
 }
 /// Short-hand way to build an Assignment
@@ -92,19 +91,19 @@ macro_rules! equation_ce {
 /// ```
 macro_rules! equation_ee {
     ($first_term:expr, $operation:ident, $second_term:expr) => {
-        Box::new(Assignment::$operation((
+        Box::new(Assignment::$operation(
             $first_term,
             $second_term,
-        )))
+        ))
     };
 }
 
 #[derive(Debug)]
 pub enum Assignment {
-    ADD((Box<Assignment>, Box<Assignment>)),
-    SUB((Box<Assignment>, Box<Assignment>)),
-    MUL((Box<Assignment>, Box<Assignment>)),
-    DIV((Box<Assignment>, Box<Assignment>)),
+    ADD(Box<Assignment>, Box<Assignment>),
+    SUB(Box<Assignment>, Box<Assignment>),
+    MUL(Box<Assignment>, Box<Assignment>),
+    DIV(Box<Assignment>, Box<Assignment>),
     TERM(String),
 
 } impl Assignment {
