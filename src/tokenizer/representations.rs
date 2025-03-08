@@ -32,12 +32,15 @@ pub struct StackMemory {
     }}
 
     pub fn add_variable(&mut self, variable_name: &str, variable_data_type: DataType) -> Result<(), TokensError> {
+        // Initiate this variable to manage error handling
         let mut new_variable_location: Option<usize> = None;
 
+        // Find the first instance of a None value
         for (variable_index, variable) in self.data.iter().enumerate() {
             if let None = variable { new_variable_location = Some(variable_index) }
         }
 
+        // Replace that None value with the new variable...
         if let Some(unwrapped_new_variable_location) = new_variable_location {
             self.data[unwrapped_new_variable_location] = Some(StackVariable {
                 name: variable_name.to_string(),
@@ -48,6 +51,7 @@ pub struct StackMemory {
             }
 
             return Ok(())
+        // and fail if no None character was found (hence initiating the target index as it as None)
         } else {
             return Err(TokensError::IncorrectStackDataFormatting)
         }
