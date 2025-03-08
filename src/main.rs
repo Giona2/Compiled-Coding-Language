@@ -1,8 +1,8 @@
 use std::fs;
 
 
-mod token;
-    use token::SyntaxTree;
+mod tokenizer;
+    use tokenizer::SyntaxTree;
 
 #[allow(dead_code)]
 mod type_traits;
