@@ -1,8 +1,8 @@
 use std::fs;
 
 
-mod tokens;
-    use tokens::SyntaxTree;
+mod token;
+    use token::SyntaxTree;
 mod type_traits;
 
 fn main() {

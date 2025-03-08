@@ -2,6 +2,10 @@ use crate::type_traits::string_vec::StringVecExtra;
 
 
 #[allow(dead_code)]
+pub mod representations;
+    use representations::StackMemory;
+
+#[allow(dead_code)]
 pub mod constructors;
     use constructors::*;
 
@@ -13,6 +17,10 @@ pub mod keyword_names;
 pub mod types;
     use types::*;
 
+#[allow(dead_code)]
+pub mod error;
+
+
 #[derive(Debug)]
 #[allow(dead_code)]
 pub enum Token {
@@ -22,56 +30,10 @@ pub enum Token {
 }
 
 
-/// Structure representing the stack memory of the program (with some constraints)
-///   - All variables are of equal size
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct Memory {
-    stack_data: Vec<Option<Declaration>>,
-    stack_step: usize,
-
-} impl Memory {
-    /// Initiates stack memory representation (`Memory`) for the program
-    /// `step` indicates how many bytes each variable can occupy
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// // Represents stack memory where each variable is 8 bytes
-    /// let memory = Memory::init(step: 8)
-    /// ```
-    #[allow(dead_code)]
-    pub fn init(step: usize) -> Self { return Self {
-        stack_data: vec![None],
-        stack_step: step,
-    }}
-
-    #[allow(dead_code)]
-    pub fn add_variable(&mut self, variable_name: &str, variable_data_type: DataType, variable_value: Option<Assignment>) {
-        let mut new_variable_location: Option<usize> = None;
-
-        for (variable_index, variable) in self.stack_data.iter().enumerate() {
-            if let None = variable { new_variable_location = Some(variable_index) }
-        }
-
-        if let Some(unwrapped_new_variable_location) = new_variable_location {
-            self.stack_data[unwrapped_new_variable_location] = Some(Declaration::new(
-                variable_name,
-                unwrapped_new_variable_location,
-                variable_data_type,
-                variable_value
-            ))
-        } else {
-            self.stack_data.push(Some());
-        }
-    }
-}
-
-
 #[derive(Debug)]
 pub struct SyntaxTree {
     token_tree: Vec<Token>,
-    memory: Memory,
+    stack_memory: StackMemory,
 
 } impl SyntaxTree {
     pub fn optimize_file_content(file_content: &str) -> Vec<String> {
@@ -124,7 +86,7 @@ pub struct SyntaxTree {
 
     pub fn from_file_content(optimized_file_content: Vec<String>) -> Self {
         let mut token_tree: Vec<Token> = Vec::new();
-        let mut memory = Memory::init(8);
+        let mut stack_memory = StackMemory::init(8);
 
         for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
             // Variable handling
@@ -147,7 +109,7 @@ pub struct SyntaxTree {
         };
     
         return Self {
-            memory,
+            stack_memory,
             token_tree,
         }
     }
