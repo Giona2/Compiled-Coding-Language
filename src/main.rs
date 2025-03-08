@@ -1,7 +1,6 @@
 use std::fs;
 
 
-#[allow(dead_code)]
 mod token;
     use token::SyntaxTree;
 
