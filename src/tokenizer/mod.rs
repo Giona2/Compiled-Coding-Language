@@ -31,11 +31,11 @@ pub enum Token {
 
 
 #[derive(Debug)]
-pub struct SyntaxTree {
+pub struct TokenTree {
     pub token_tree: Vec<Token>,
     pub stack_memory: StackMemory,
 
-} impl SyntaxTree {
+} impl TokenTree {
     pub fn optimize_file_content(file_content: &str) -> Vec<String> {
         // Replace all newline and tab characters eith spaces
         let script_content_flattened: Vec<char> = file_content
