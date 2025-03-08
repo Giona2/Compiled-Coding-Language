@@ -25,19 +25,8 @@ pub struct TerminatingLoop {}
 
 #[derive(Debug)]
 pub struct Declaration {
-    name: String,
-    location: usize,
-    data_type: DataType,
-    value: Option<Assignment>,
+    pub name: String,
+    pub data_type: DataType,
+    pub value: Option<Assignment>,
 
-} impl Declaration {
-    /// (name: &str, data_type: DataType, value: Option<Assignment>)
-    ///
-    /// Creates a Declaration object
-    pub fn new(name: &str, location: usize, data_type: DataType, value: Option<Assignment>) -> Self { return Self {
-        name: name.to_string(),
-        location,
-        data_type,
-        value,
-    }}
 }

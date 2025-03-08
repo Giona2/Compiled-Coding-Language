@@ -32,8 +32,8 @@ pub enum Token {
 
 #[derive(Debug)]
 pub struct SyntaxTree {
-    token_tree: Vec<Token>,
-    stack_memory: StackMemory,
+    pub token_tree: Vec<Token>,
+    pub stack_memory: StackMemory,
 
 } impl SyntaxTree {
     pub fn optimize_file_content(file_content: &str) -> Vec<String> {
@@ -96,13 +96,19 @@ pub struct SyntaxTree {
                 let equal_sign_index = full_declaration.find("=").unwrap();
 
                 let string_assignment = full_declaration[equal_sign_index+1..full_declaration.len()-1].to_vec();
-                let assignment = Assignment::from_string_vec(string_assignment);
 
-                let declaration = Declaration::new(
-                    &optimized_file_content[current_word_index+1],
-                    DataType::check_token_type(current_word).unwrap(),
-                    Some(assignment.unwrap()),
-                );
+                let name = optimized_file_content[current_word_index+1].clone();
+                let data_type = DataType::check_token_type(current_word).unwrap();
+                let assignment = Assignment::from_string_vec(&stack_memory, string_assignment).unwrap();
+
+                let declaration = Declaration {
+                    name: name.to_string(),
+                    data_type: data_type.clone(),
+                    value: Some(assignment),
+                };
+
+                stack_memory.add_variable(&name, data_type)
+                    .expect("stack_memory does not conclude with None");
 
                 token_tree.push(Token::DECLARATION(declaration));
             }

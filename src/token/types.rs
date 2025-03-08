@@ -1,7 +1,9 @@
+use super::error::TokensError;
 use super::keyword_names;
+use super::representations::StackMemory;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DataType {
     INTEGER,
 
@@ -13,83 +15,38 @@ pub enum DataType {
 }
 
 
-/// Short-hand way to build an Assignment
-/// The suffix indicates the types you need to use for this specific variant
-///     c: constant (a string litteral)
-///     e: equation (an Assignment build from equation_!())
-/// 
-/// # Examples
+/// Used in conjunction with Assignment to represent an arithmatic term
 ///
-/// ```rust
-/// let equation: Assignment = equation_cc!("1", ADD, "2");
-///
-/// // output: ADD((TERM("1"), TERM("2")))
-/// println!("{equation:?}");
-/// ```
-macro_rules! equation_cc {
-    ($first_term:expr, $operation:ident, $second_term:expr) => {
+/// LITERAL(String) -> literal number value (`3` in `x + 3`)
+/// VARIABLE(usize) -> variable value (`x` in `x + 3`) where usize is the stack memory slot where
+///                    the variable is contained
+#[derive(Debug)]
+pub enum Term {
+    LITERAL(String),
+    VARIABLE(usize),
+}
+
+/// A shorthand method to build an Assignment enumerator
+#[macro_export]
+macro_rules! eq {
+    ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term_branch:ident($second_term:expr)) => {
         Box::new(Assignment::$operation(
-            Box::new(Assignment::TERM($first_term.to_string())),
-            Box::new(Assignment::TERM($second_term.to_string())),
+            Box::new(Assignment::$first_term_branch($first_term.to_string())),
+            Box::new(Assignment::$second_term_branch($second_term.to_string())),
         ))
     };
-}
-/// Short-hand way to build an Assignment
-/// The suffix indicates the types you need to use for this specific variant
-///     c: constant (a string litteral)
-///     e: equation (an Assignment build from equation_!())
-/// 
-/// # Examples
-///
-/// ```rust
-/// let equation: Assignment = equation_ec!(equation_cc!("1", ADD, "2"), ADD, "3");
-///
-/// // output: ADD((ADD((TERM("1"), TERM("2"))), TERM("3")))
-/// println!("{equation:?}");
-/// ```
-macro_rules! equation_ec {
-    ($first_term:expr, $operation:ident, $second_term:expr) => {
+    ($first_equation:expr, $operation:ident, $second_term_branch:ident($second_term:expr)) => {
         Box::new(Assignment::$operation(
-            $first_term,
-            Box::new(Assignment::TERM($second_term.to_string())),
+            $first_equation,
+            Box::new(Assignment::$second_term_branch($second_term.to_string())),
         ))
     };
-}
-/// Short-hand way to build an Assignment
-/// The suffix indicates the types you need to use for this specific variant
-///     c: constant (a string litteral)
-///     e: equation (an Assignment build from equation_!())
-/// 
-/// # Examples
-///
-/// ```rust
-/// let equation: Assignment = equation_ce!("1", ADD, equation_cc("2", ADD, "3"));
-///
-/// // output: ADD((TERM("1"), ADD((TERM("2"), TERM("3")))))
-/// println!("{equation:?}");
-/// ```
-macro_rules! equation_ce {
-    ($first_term:expr, $operation:ident, $second_term:expr) => {
+    ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term:expr) => {
         Box::new(Assignment::$operation(
-            Box::new(Assignment::TERM($first_term.to_string())),
+            Box::new(Assignment::$first_term_branch($first_term.to_string())),
             $second_term,
         ))
     };
-}
-/// Short-hand way to build an Assignment
-/// The suffix indicates the types you need to use for this specific variant
-///     c: constant (a string litteral)
-///     e: equation (an Assignment build from equation_!())
-/// 
-/// # Examples
-///
-/// ```rust
-/// let equation: Assignment = equation_ee!(equation_cc!("1", ADD "2"), ADD, equation_cc("3", ADD, "4"));
-///
-/// // output: ADD((ADD((TERM("1"), TERM("2"))), ADD((TERM("3"), TERM("4")))))
-/// println!("{equation:?}");
-/// ```
-macro_rules! equation_ee {
     ($first_term:expr, $operation:ident, $second_term:expr) => {
         Box::new(Assignment::$operation(
             $first_term,
@@ -98,13 +55,26 @@ macro_rules! equation_ee {
     };
 }
 
+/// A representation of the series of steps the program needs to run to equate a `Declaration`
+///
+/// Each branch represents an arithmatic expression that can be calculated by the CPU registers
+///
+/// Note that the recommended method to build an Assignment is by using the
+/// equation_cc/_ec/_ce/_ee! macros
+///
+/// ADD(TERM("1"), TERM("2")) -> add 1 to 2
+/// SUB(TERM("1"), TERM("2")) -> subtract 1 from 2
+/// MUL(TERM("1"), TERM("2")) -> multiply 1 to 2
+/// DIV(TERM("1"), TERM("2")) -> divide 1 by 2
+/// TERM("1")                 -> represents a constant (a number litteral)
 #[derive(Debug)]
 pub enum Assignment {
     ADD(Box<Assignment>, Box<Assignment>),
     SUB(Box<Assignment>, Box<Assignment>),
     MUL(Box<Assignment>, Box<Assignment>),
     DIV(Box<Assignment>, Box<Assignment>),
-    TERM(String),
+    CONST(String),
+    VAR(usize),
 
 } impl Assignment {
     /// Converts a formatted Vec<String> to a nested Declaration orderded using PEMDAS. Each element in the list should
@@ -122,19 +92,44 @@ pub enum Assignment {
     /// // output: ADD((TERM(3), DIV(TERM(4), TERM(6))))
     /// println!("{declaration:?}");
     /// ```
-    pub fn from_string_vec(string_equation: Vec<String>) -> Option<Self> {
+    pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokensError> {
         if string_equation.len() == 1 {
-            return Some(Self::TERM(string_equation[0].clone()))
+            return Ok(Self::CONST(string_equation[0].clone()))
         }
 
-        println!("Assignment::from_string_vec");
-        println!("  recieved {:?}", string_equation);
+        let mut first_term  = Box::new(Assignment::CONST(string_equation[0].clone()));
+        let mut second_term = Box::new(Assignment::CONST(string_equation[2].clone()));
+
+        if let Some(variable_location) = stack_memory.find_variable(&string_equation[0]) {
+            first_term = Box::new(Assignment::VAR(variable_location))
+        }
+
+        if let Some(variable_location) = stack_memory.find_variable(&string_equation[2]) {
+            second_term = Box::new(Assignment::VAR(variable_location))
+        }
+        
         match string_equation[1].as_str() {
-            "+" => Some(*equation_cc!(string_equation[0], ADD, string_equation[2])),
-            "-" => Some(*equation_cc!(string_equation[0], SUB, string_equation[2])),
-            "*" => Some(*equation_cc!(string_equation[0], MUL, string_equation[2])),
-            "/" => Some(*equation_cc!(string_equation[0], DIV, string_equation[2])),
-              _ => None
+            "+" => Ok(*eq!(first_term, ADD, second_term)),
+            "-" => Ok(*eq!(first_term, SUB, second_term)),
+            "*" => Ok(*eq!(first_term, MUL, second_term)),
+            "/" => Ok(*eq!(first_term, DIV, second_term)),
+              _ => Err(TokensError::IncorrectEquationFormatting), 
+        }
+    }
+
+    pub fn is_const(&self) -> bool {
+        if let Self::CONST(_) = *self {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    pub fn is_var(&self) -> bool {
+        if let Self::VAR(_) = *self {
+            return true
+        } else {
+            return false
         }
     }
 }
