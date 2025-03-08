@@ -9,7 +9,7 @@ mod type_traits;
 
 
 fn main() {
-    let file_content: String = fs::read_to_string("./syntax_example.txt")
+    let file_content: String = fs::read_to_string("./examples/syntax_example.txt")
         .expect("Failed to read file");
     let optimized_file_content = TokenTree::optimize_file_content(&file_content);
 
