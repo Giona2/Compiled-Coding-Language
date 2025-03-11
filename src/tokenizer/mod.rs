@@ -30,11 +30,11 @@ pub enum Token {
 
 
 #[derive(Debug)]
-pub struct TokenTree {
-    token_tree: Vec<Token>,
-    stack_memory: StackMemory,
+pub struct Tokenizer {
+    pub token_tree: Vec<Token>,
+    pub stack_memory: StackMemory,
 
-} impl TokenTree {
+} impl Tokenizer {
     pub fn from_file_content(optimizer: &Optimizer) -> Self {
         let mut token_tree: Vec<Token> = Vec::new();
         let mut stack_memory = StackMemory::init(8);

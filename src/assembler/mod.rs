@@ -1,4 +1,4 @@
-use crate::tokenizer::{TokenTree, Token};
+use crate::tokenizer::{Tokenizer, Token};
 
 
 #[allow(dead_code)]
@@ -22,6 +22,7 @@ impl Assembler {
             "  mov rbp, rsp",
         ].iter().map(|x| x.to_string()).collect();
 
+        // Iterate over each token and translate it accordingly
         for token in token_tree.token_tree.iter() { match token {
             Token::DECLARATION(declaration) => {
                 let appended_file_content: Vec<String> = vec![
@@ -32,15 +33,18 @@ impl Assembler {
             _ => {}
         }}
 
+        // Write the end to the program
         file_content.append(&mut vec![
-	        "    mov rsp, rbp",
-	        "    pop rbp",
+	        "  mov rsp, rbp",
+	        "  pop rbp",
 
-	        "    mov rax, 60",
-	        "    mov rdi, 0",
-	        "    syscall",
+	        "  mov rax, 60",
+	        "  mov rdi, 0",
+	        "  syscall",
         ].iter().map(|x| x.to_string()).collect());
 
-        todo!()
+        return Ok(Self{
+            file_content,
+        })
     }
 }
