@@ -1,5 +1,5 @@
-use super::error::TokensError;
-use super::keyword_names;
+use super::error::TokenizerError;
+use crate::data::syntactic_elements;
 use super::representations::StackMemory;
 
 
@@ -9,7 +9,7 @@ pub enum DataType {
 
 } impl DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { match word_to_check {
-        keyword_names::types::INTEGER => Some(Self::INTEGER),
+        syntactic_elements::types::INTEGER => Some(Self::INTEGER),
                                     _ => None
     }}
 }
@@ -92,7 +92,7 @@ pub enum Assignment {
     /// // output: ADD((TERM(3), DIV(TERM(4), TERM(6))))
     /// println!("{declaration:?}");
     /// ```
-    pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokensError> {
+    pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
         if string_equation.len() == 1 {
             return Ok(Self::CONST(string_equation[0].clone()))
         }
@@ -113,7 +113,7 @@ pub enum Assignment {
             "-" => Ok(*eq!(first_term, SUB, second_term)),
             "*" => Ok(*eq!(first_term, MUL, second_term)),
             "/" => Ok(*eq!(first_term, DIV, second_term)),
-              _ => Err(TokensError::IncorrectEquationFormatting), 
+              _ => Err(TokenizerError::IncorrectEquationFormatting), 
         }
     }
 

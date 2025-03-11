@@ -1,5 +1,5 @@
 use super::types::DataType;
-use super::error::TokensError;
+use super::error::TokenizerError;
 
 
 #[derive(Debug)]
@@ -13,8 +13,8 @@ pub struct StackVariable {
 ///   - All variables are of equal size
 #[derive(Debug)]
 pub struct StackMemory {
-    data: Vec<Option<StackVariable>>,
-    step: usize,
+    pub data: Vec<Option<StackVariable>>,
+    pub step: usize,
 
 } impl StackMemory {
     /// Initiates stack memory representation (`Memory`) for the program
@@ -31,7 +31,7 @@ pub struct StackMemory {
         step,
     }}
 
-    pub fn add_variable(&mut self, variable_name: &str, variable_data_type: DataType) -> Result<(), TokensError> {
+    pub fn add_variable(&mut self, variable_name: &str, variable_data_type: DataType) -> Result<(), TokenizerError> {
         // Initiate this variable to manage error handling
         let mut new_variable_location: Option<usize> = None;
 
@@ -53,7 +53,7 @@ pub struct StackMemory {
             return Ok(())
         // and fail if no None character was found (hence initiating the target index as it as None)
         } else {
-            return Err(TokensError::IncorrectStackDataFormatting)
+            return Err(TokenizerError::IncorrectStackDataFormatting)
         }
     }
     
