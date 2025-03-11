@@ -25,9 +25,11 @@ fn main() {
 
     let tokenizer = Tokenizer::from_file_content(&optimizer.content);
 
-    let assembler = Assembler::from_token_tree(&tokenizer.token_tree, &tokenizer.stack_memory);
+    let assembler = Assembler::from_token_tree(&tokenizer.token_tree, &tokenizer.stack_memory).unwrap();
     
-    for line in ass
+    for instruction in assembler.instructions {
+        println!("{instruction}");
+    }
 }
 
 #[cfg(test)]
