@@ -11,7 +11,7 @@ pub enum DataType {
 } impl DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { match word_to_check {
         syntactic_elements::types::INTEGER => Some(Self::INTEGER),
-        syntactic_elements::types::
+        syntactic_elements::types::FLOAT
                                          _ => None
     }}
 }
