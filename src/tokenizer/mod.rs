@@ -35,22 +35,22 @@ pub struct Tokenizer {
     pub stack_memory: StackMemory,
 
 } impl Tokenizer {
-    pub fn from_file_content(optimizer: &Optimizer) -> Self {
+    pub fn from_file_content(optimized_file_content: &Vec<String>) -> Self {
         let mut token_tree: Vec<Token> = Vec::new();
         let mut stack_memory = StackMemory::init(8);
 
-        for (current_word_index, current_word) in optimizer.content.iter().enumerate() {
+        for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
             // Variable handling
             if syntactic_elements::types::get_type_names().contains(current_word) {
                 // Parse the declaration
-                let full_declaration = optimizer.content.index_to_pattern(current_word_index, ";").unwrap();
+                let full_declaration = optimized_file_content.index_to_pattern(current_word_index, ";").unwrap();
                 let equal_sign_index = full_declaration.find("=").unwrap();
 
                 // Get the assignment part (everything after equals and before `;`)
                 let string_assignment = full_declaration[equal_sign_index+1..full_declaration.len()-1].to_vec();
 
                 // Retrieve the name of te variable, its data_type, and what it's assigned to
-                let name = optimizer.content[current_word_index+1].clone();
+                let name = optimized_file_content[current_word_index+1].clone();
                 let data_type = DataType::check_token_type(current_word).unwrap();
                 let assignment = Assignment::from_string_vec(&stack_memory, string_assignment).unwrap();
 

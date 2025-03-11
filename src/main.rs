@@ -23,9 +23,11 @@ fn main() {
 
     let optimizer = Optimizer::from_file_content(&file_content);
 
-    let tokenizer = Tokenizer::from_file_content(&optimizer);
+    let tokenizer = Tokenizer::from_file_content(&optimizer.content);
 
-    let assembler = Assembler::from_token_tree(&tokenizer);
+    let assembler = Assembler::from_token_tree(&tokenizer.token_tree, &tokenizer.stack_memory);
+    
+    for line in ass
 }
 
 #[cfg(test)]
