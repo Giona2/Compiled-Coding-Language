@@ -3,6 +3,7 @@ pub mod syntactic_elements {
 pub mod types {
     pub fn get_type_names() -> Vec<String> { return vec![
         "int",
+        "float",
 
     ].into_iter().map(|x| x.to_string()).collect()}
     pub const INTEGER: &str = "int";

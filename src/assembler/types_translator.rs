@@ -85,31 +85,48 @@ impl AssignmentToAssembly for Assignment {
             let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
 
             return vec![
-                format!("  push rax"),
                 format!("  mov rax, {}", term_1_value),
                 format!("  add rax, {}", term_2_value),
             ]
         }
-        Self::SUB(term_1, term_2)    => { return vec![
-            ""
-        ].iter().map(|x| x.to_string()).collect()}
-        Self::MUL(term_1, term_2)    => { return vec![
-            ""
-        ].iter().map(|x| x.to_string()).collect()}
-        Self::DIV(term_1, term_2)    => { return vec![
-            ""
-        ].iter().map(|x| x.to_string()).collect()}
+        Self::SUB(term_1, term_2)    => {
+            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+
+            return vec![
+                format!("  mov rax, {}", term_1_value),
+                format!("  sub rax, {}", term_2_value),
+            ]
+        }
+        Self::MUL(term_1, term_2)    => {
+            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+
+            return vec![
+                format!("  mov rax, {}", term_1_value),
+                format!("  mul {}", term_2_value),
+            ]
+        }
+        Self::DIV(term_1, term_2)    => { 
+            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+
+            return vec![
+                format!("  mov rax, {}", term_1_value),
+                format!("  add rax, {}", term_2_value),
+            ]
+        }
         Self::CONST(constant)        => { return vec![
-            ""
+            format!("  mov rax, {}", constant),
         ].iter().map(|x| x.to_string()).collect()}
         Self::VAR(variable_location) => { return vec![
-            ""
+            format!("  mov rax, QWORD [rbp-{}]", stack_memory.step * (variable_location+1)),
         ].iter().map(|x| x.to_string()).collect()}
     }}
 
     fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError> { match self {
         Assignment::CONST(constant)        => { Ok(constant.to_string()) }
-        Assignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * variable_location)) }
+        Assignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
                                          _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
     }}
 }

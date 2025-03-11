@@ -6,27 +6,26 @@ use super::representations::StackMemory;
 #[derive(Debug, Clone)]
 pub enum DataType {
     INTEGER,
+    FLOAT,
 
 } impl DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { match word_to_check {
         syntactic_elements::types::INTEGER => Some(Self::INTEGER),
-                                    _ => None
+        syntactic_elements::types::
+                                         _ => None
     }}
 }
 
 
-/// Used in conjunction with Assignment to represent an arithmatic term
-///
-/// LITERAL(String) -> literal number value (`3` in `x + 3`)
-/// VARIABLE(usize) -> variable value (`x` in `x + 3`) where usize is the stack memory slot where
-///                    the variable is contained
-#[derive(Debug)]
-pub enum Term {
-    LITERAL(String),
-    VARIABLE(usize),
-}
-
 /// A shorthand method to build an Assignment enumerator
+///
+/// Note that it will be built around a `Box<>` pointer
+///
+/// # Examples
+///
+/// ```rust
+/// let assignment = eq!(TERM("3"), )
+/// ```
 #[macro_export]
 macro_rules! eq {
     ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term_branch:ident($second_term:expr)) => {
@@ -67,7 +66,7 @@ macro_rules! eq {
 /// MUL(TERM("1"), TERM("2")) -> multiply 1 to 2
 /// DIV(TERM("1"), TERM("2")) -> divide 1 by 2
 /// TERM("1")                 -> represents a constant (a number litteral)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Assignment {
     ADD(Box<Assignment>, Box<Assignment>),
     SUB(Box<Assignment>, Box<Assignment>),

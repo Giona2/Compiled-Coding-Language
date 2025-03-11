@@ -23,7 +23,7 @@ pub struct Function {
 #[derive(Debug)]
 pub struct TerminatingLoop {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Declaration {
     pub name: String,
     pub location: usize,

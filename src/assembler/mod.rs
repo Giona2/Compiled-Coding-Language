@@ -7,6 +7,7 @@ pub mod error;
 
 #[allow(dead_code)]
 pub mod types_translator;
+    use types_translator::AssignmentToAssembly;
 
 
 pub struct Assembler {
@@ -20,15 +21,31 @@ impl Assembler {
             "_start:",
             "  push rbp",
             "  mov rbp, rsp",
+            "",
         ].iter().map(|x| x.to_string()).collect();
 
         // Iterate over each token and translate it accordingly
         for token in token_tree.iter() { match token {
             Token::DECLARATION(declaration) => {
+                let assignment_instructions = declaration.clone()
+                    .value.unwrap()
+                    .to_assembly(stack_memory);
+
+                println!("Assembler::from_token_tree");
+                println!("From:     {declaration:?}");
+                println!("Returned: {assignment_instructions:?}");
+
                 let appended_instructions: Vec<String> = vec![
-                    format!("  sub rsp {}", stack_memory.step),
-                    format!("  mov QWORD [rbp-{}], {}", stack_memory.step, "")
-                ].iter().map(|x| x.to_string()).collect();
+                    vec![
+                        format!("  sub rsp, {}", stack_memory.step),
+                        format!("  push rax"),
+                    ],
+                    assignment_instructions,
+                    vec![
+                        format!("  mov QWORD [rbp-{}], rax", (declaration.location+1) * stack_memory.step),
+                        format!("  pop rax"),
+                    ],
+                ].concat().iter().map(|x| x.to_string()).collect();
                 program_instructions = vec![program_instructions.clone(), appended_instructions].concat();
             }
             _ => {}
@@ -36,6 +53,8 @@ impl Assembler {
 
         // Write the end to the program
         program_instructions.append(&mut vec![
+            "",
+            ".exit:",
 	        "  mov rsp, rbp",
 	        "  pop rbp",
 

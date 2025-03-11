@@ -27,9 +27,9 @@ fn main() {
 
     let assembler = Assembler::from_token_tree(&tokenizer.token_tree, &tokenizer.stack_memory).unwrap();
     
-    for instruction in assembler.instructions {
-        println!("{instruction}");
-    }
+    let program_content = assembler.instructions.join("\n");
+    fs::write("./a.asm", program_content)
+        .expect("Failed to write a.asm");
 }
 
 #[cfg(test)]
