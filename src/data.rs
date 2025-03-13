@@ -9,6 +9,13 @@ pub struct SyntaxElements {
     comparison_symbols: Vec<String>,
     comparson_symbol_table: HashMap<String, String>,
 } impl SyntaxElements {
+    fn init() -> Self { Self {
+        type_names: vec![
+        ],
+        type_name_table: 
+    }}
+
+    fn get_type_names()
 }
 
 pub mod syntactic_elements {
