@@ -1,3 +1,6 @@
+use crate::hashmap;
+use crate::type_traits::hashmap::HashMapStrStrExtra;
+
 use std::collections::HashMap;
 
 
@@ -12,7 +15,10 @@ pub struct SyntaxElements {
     fn init() -> Self { Self {
         type_names: vec![
         ],
-        type_name_table: 
+        type_name_table: hashmap![
+            "" => "",
+        ].to_string(),
+
     }}
 
     fn get_type_names()
