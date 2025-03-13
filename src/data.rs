@@ -1,28 +1,59 @@
 use crate::hashmap;
 use crate::type_traits::str_str_hashmap::StrStrHashMapExtra;
-use crate::type_traits::str_vec::StrVecExtra;
 
 use std::collections::HashMap;
 
 
 pub struct SyntaxElements {
-    type_names: Vec<String>,
     type_name_table: HashMap<String, String>,
-    math_symbols: Vec<String>,
     math_symbol_table: HashMap<String, String>,
-    comparison_symbols: Vec<String>,
     comparson_symbol_table: HashMap<String, String>,
+    assignment_synbol_table: HashMap<String, String>,
+
 } impl SyntaxElements {
-    fn init() -> Self { Self {
-        type_names: vec![
-        ].to_string_vec(),
+    pub fn init() -> Self { Self {
         type_name_table: hashmap![
-            "" => "",
+            "integer" => "int",
+            "float"   => "float",
         ].to_string_hashmap(),
 
+        math_symbol_table: hashmap![
+            "addition"       => "+",
+            "subtraction"    => "-",
+            "multiplication" => "*",
+            "division"       => "+",
+        ].to_string_hashmap(),
+
+        comparson_symbol_table: hashmap![
+            "greater than" => ">",
+            "less than"    => "<",
+        ].to_string_hashmap(),
+
+        assignment_synbol_table: hashmap![
+            "is equal to" => "=",
+            "begin body"  => "{",
+            "end body"    => "}",
+        ].to_string_hashmap(),
     }}
 
-    fn get_type_names()
+    pub fn get_all_element_names(&self) -> Vec<String> {
+        let mut result = Vec::new();
+
+        for (_, element_name) in self.type_name_table.clone() {
+            result.push(element_name);
+        }
+
+        for (_, element_name) in self.math_symbol_table.clone() {
+            result.push(element_name);
+        }
+
+        for (_, element_name) in self.comparson_symbol_table.clone() {
+            result.push(element_name);
+        }
+
+        return result;
+    }
+
 }
 
 pub mod syntactic_elements {
