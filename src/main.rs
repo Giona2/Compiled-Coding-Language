@@ -39,6 +39,7 @@ fn main() {
         .expect("Failed to write a.asm");
 
     // Assemble (using nasm/ld) the final assembly file
+    // Note this is compiled in debug mode
     process::Command::new("nasm")
         .args(["-f", "elf64"])
         .args(["-g"])
