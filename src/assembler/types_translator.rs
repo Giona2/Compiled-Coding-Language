@@ -1,5 +1,6 @@
-use crate::tokenizer::types::Assignment;
+use crate::tokenizer::types::{FloatAssignment, IntegerAssignment};
 use crate::tokenizer::representations::StackMemory;
+use crate::type_traits::float_64::F64Extra;
 
 use super::error::AssemblerError;
 
@@ -78,7 +79,7 @@ pub trait AssignmentToAssembly {
     fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError>;
 }
 
-impl AssignmentToAssembly for Assignment {
+impl AssignmentToAssembly for IntegerAssignment {
     fn to_assembly(&self, stack_memory: &StackMemory) -> Vec<String> { match self {
         Self::ADD(term_1, term_2)    => {
             let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
@@ -107,13 +108,73 @@ impl AssignmentToAssembly for Assignment {
                 format!("  mul {}", term_2_value),
             ]
         }
-        Self::DIV(term_1, term_2)    => { 
+        Self::CONST(constant)        => { return vec![
+            format!("  mov rax, {}", constant),
+        ].iter().map(|x| x.to_string()).collect()}
+        Self::VAR(variable_location) => { return vec![
+            format!("  mov rax, QWORD [rbp-{}]", stack_memory.step * (variable_location+1)),
+        ].iter().map(|x| x.to_string()).collect()}
+    }}
+
+    fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError> { match self {
+        IntegerAssignment::CONST(constant)        => { Ok(constant.to_string()) }
+        IntegerAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
+                                         _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
+    }}
+}
+
+impl AssignmentToAssembly for FloatAssignment {
+    fn to_assembly(&self, stack_memory: &StackMemory) -> Vec<String> { match self {
+        Self::ADD(term_1, term_2)    => {
             let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
             let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
 
             return vec![
-                format!("  mov rax, {}", term_1_value),
-                format!("  add rax, {}", term_2_value),
+                format!("  mov rax, __float64__({})", term_1_value),
+                format!("  movq xmm0, rax"),
+                format!("  mov rax, __float64__({})", term_2_value),
+                format!("  movq xmm1, rax"),
+                format!("  addsd xmm0, xmm1"),
+                format!("  movq rax, xmm0"),
+            ]
+        }
+        Self::SUB(term_1, term_2)    => {
+            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+
+            return vec![
+                format!("  mov rax, __float64__({})", term_1_value),
+                format!("  movq xmm0, rax"),
+                format!("  mov rax, __float64__({})", term_2_value),
+                format!("  movq xmm1, rax"),
+                format!("  subsd xmm0, xmm1"),
+                format!("  movq rax, xmm0"),
+            ]
+        }
+        Self::MUL(term_1, term_2)    => {
+            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+
+            return vec![
+                format!("  mov rax, __float64__({})", term_1_value),
+                format!("  movq xmm0, rax"),
+                format!("  mov rax, __float64__({})", term_2_value),
+                format!("  movq xmm1, rax"),
+                format!("  mulsd xmm0, xmm1"),
+                format!("  movq rax, xmm0"),
+            ]
+        }
+        Self::DIV(term_1, term_2) => {
+            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+
+            return vec![
+                format!("  mov rax, __float64__({})", term_1_value),
+                format!("  movq xmm0, rax"),
+                format!("  mov rax, __float64__({})", term_2_value),
+                format!("  movq xmm1, rax"),
+                format!("  divsd xmm0, xmm1"),
+                format!("  movq rax, xmm0"),
             ]
         }
         Self::CONST(constant)        => { return vec![
@@ -125,8 +186,8 @@ impl AssignmentToAssembly for Assignment {
     }}
 
     fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError> { match self {
-        Assignment::CONST(constant)        => { Ok(constant.to_string()) }
-        Assignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
-                                         _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
+        FloatAssignment::CONST(constant)        => { Ok(constant.to_assembly_value()) }
+        FloatAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
+                                              _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
     }}
 }

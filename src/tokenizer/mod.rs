@@ -1,5 +1,4 @@
 use crate::type_traits::string_vec::StringVecExtra;
-use crate::optimizer::Optimizer;
 use crate::data::syntactic_elements;
 
 
@@ -35,45 +34,78 @@ pub struct Tokenizer {
     pub stack_memory: StackMemory,
 
 } impl Tokenizer {
-    pub fn from_file_content(optimized_file_content: &Vec<String>) -> Self {
-        let mut token_tree: Vec<Token> = Vec::new();
-        let mut stack_memory = StackMemory::init(8);
+    pub fn init(stack_memory_step: usize) -> Self { Self {
+        token_tree: Vec::new(),
+        stack_memory: StackMemory::init(stack_memory_step),
+    }}
 
+    pub fn generate_token_tree(&mut self, optimized_file_content: &Vec<String>) {
         for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
             // Variable handling
             if syntactic_elements::types::get_type_names().contains(current_word) {
-                // Parse the declaration
-                let full_declaration = optimized_file_content.index_to_pattern(current_word_index, ";").unwrap();
-                let equal_sign_index = full_declaration.find("=").unwrap();
-
-                // Get the assignment part (everything after equals and before `;`)
-                let string_assignment = full_declaration[equal_sign_index+1..full_declaration.len()-1].to_vec();
-
-                // Retrieve the name of te variable, its data_type, and what it's assigned to
-                let name = optimized_file_content[current_word_index+1].clone();
-                let data_type = DataType::check_token_type(current_word).unwrap();
-                let assignment = Assignment::from_string_vec(&stack_memory, string_assignment).unwrap();
-
-                // Add it to representation stack_memory
-                stack_memory.add_variable(&name, data_type.clone())
-                    .expect("stack_memory does not conclude with None");
-
-                // Build the declaration token
-                let declaration = Declaration {
-                    name: name.to_string(),
-                    location: stack_memory.find_variable(&name).unwrap(),
-                    data_type,
-                    value: Some(assignment),
-                };
-
-                // Add the token to the token_tree
-                token_tree.push(Token::DECLARATION(declaration));
+                self.parse_declaration(current_word, current_word_index, optimized_file_content);
             }
         };
-    
-        return Self {
-            stack_memory,
-            token_tree,
-        }
     }
+
+    fn parse_declaration(&mut self, current_word: &String, current_word_index: usize, optimized_file_content: &Vec<String>) { match DataType::check_token_type(&current_word).unwrap() {
+        DataType::INTEGER => {
+            // Parse the declaration
+            let full_declaration = optimized_file_content.index_to_pattern(current_word_index, ";").unwrap();
+            let equal_sign_index = full_declaration.find("=").unwrap();
+
+            // Get the assignment part (everything after equals and before `;`)
+            let string_assignment = full_declaration[equal_sign_index+1..full_declaration.len()-1].to_vec();
+
+            // Retrieve the name of te variable, its data_type, and what it's assigned to
+            let name = optimized_file_content[current_word_index+1].clone();
+            let data_type = DataType::check_token_type(current_word).unwrap();
+            let assignment = IntegerAssignment::from_string_vec(&self.stack_memory, string_assignment).unwrap();
+
+            // Add it to representation stack_memory
+            self.stack_memory.add_variable(&name, data_type.clone())
+                .expect("stack_memory does not conclude with None");
+
+            // Build the declaration token
+            let declaration = Declaration {
+                name: name.to_string(),
+                location: self.stack_memory.find_variable(&name).unwrap(),
+                data_type,
+                value: Some(Assignment::INTEGER(assignment)),
+            };
+
+            // Add the token to the token_tree
+            self.token_tree.push(Token::DECLARATION(declaration));
+        }
+
+        DataType::FLOAT => {
+            println!("Found Float");
+            // Parse the declaration
+            let full_declaration = optimized_file_content.index_to_pattern(current_word_index, ";").unwrap();
+            let equal_sign_index = full_declaration.find("=").unwrap();
+ 
+            // Get the assignment part (everything after equals and before `;`)
+            let string_assignment = full_declaration[equal_sign_index+1..full_declaration.len()-1].to_vec();
+ 
+            // Retrieve the name of te variable, its data_type, and what it's assigned to
+            let name = optimized_file_content[current_word_index+1].clone();
+            let data_type = DataType::check_token_type(current_word).unwrap();
+            let assignment = FloatAssignment::from_string_vec(&self.stack_memory, string_assignment).unwrap();
+ 
+            // Add it to representation stack_memory
+            self.stack_memory.add_variable(&name, data_type.clone())
+                .expect("stack_memory does not conclude with None");
+ 
+            // Build the declaration token
+            let declaration = Declaration {
+                name: name.to_string(),
+                location: self.stack_memory.find_variable(&name).unwrap(),
+                data_type,
+                value: Some(Assignment::FLOAT(assignment)),
+            };
+ 
+            // Add the token to the token_tree
+            self.token_tree.push(Token::DECLARATION(declaration));
+        }
+    }}
 }

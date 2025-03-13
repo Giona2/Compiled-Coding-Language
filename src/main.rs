@@ -23,9 +23,12 @@ fn main() {
 
     let optimizer = Optimizer::from_file_content(&file_content);
 
-    let tokenizer = Tokenizer::from_file_content(&optimizer.content);
+    let mut tokenizer = Tokenizer::init(8);
+    tokenizer.generate_token_tree(&optimizer.content);
+    println!("tokenizer: {tokenizer:?}");
 
-    let assembler = Assembler::from_token_tree(&tokenizer.token_tree, &tokenizer.stack_memory).unwrap();
+    let mut assembler = Assembler::init();
+    assembler.generate_instructions(&tokenizer.token_tree, &tokenizer.stack_memory).unwrap();
     
     let program_content = assembler.instructions.join("\n");
     fs::write("./a.asm", program_content)
@@ -33,4 +36,12 @@ fn main() {
 }
 
 #[cfg(test)]
-mod testing {}
+mod testing {
+    #[test]
+    fn number_parsing() {
+        let number_to_parse: String = "3.2".to_string();
+        let result: i32 = number_to_parse.parse()
+            .expect("Failed");
+        println!("result: {}", result);
+    }
+}

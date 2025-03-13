@@ -11,43 +11,73 @@ pub enum DataType {
 } impl DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { match word_to_check {
         syntactic_elements::types::INTEGER => Some(Self::INTEGER),
-        syntactic_elements::types::FLOAT
-                                         _ => None
+        syntactic_elements::types::FLOAT   => Some(Self::FLOAT),
+                                         _ => None,
     }}
+}
+
+
+#[derive(Debug, Clone)]
+pub enum Assignment {
+    INTEGER(IntegerAssignment),
+    FLOAT(FloatAssignment),
 }
 
 
 /// A shorthand method to build an Assignment enumerator
 ///
-/// Note that it will be built around a `Box<>` pointer
-///
-/// # Examples
-///
 /// ```rust
-/// let assignment = eq!(TERM("3"), )
+/// ieq!(t"1", ADD, ieq(t"2", SUB, t'3'))
 /// ```
 #[macro_export]
-macro_rules! eq {
+macro_rules! ieq {
     ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term_branch:ident($second_term:expr)) => {
-        Box::new(Assignment::$operation(
-            Box::new(Assignment::$first_term_branch($first_term.to_string())),
-            Box::new(Assignment::$second_term_branch($second_term.to_string())),
+        Box::new(IntegerAssignment::$operation(
+            Box::new(IntegerAssignment::$first_term_branch($first_term.to_string())),
+            Box::new(IntegerAssignment::$second_term_branch($second_term.to_string())),
         ))
     };
     ($first_equation:expr, $operation:ident, $second_term_branch:ident($second_term:expr)) => {
-        Box::new(Assignment::$operation(
+        Box::new(IntegerAssignment::$operation(
             $first_equation,
-            Box::new(Assignment::$second_term_branch($second_term.to_string())),
+            Box::new(IntegerAssignment::$second_term_branch($second_term.to_string())),
         ))
     };
     ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term:expr) => {
-        Box::new(Assignment::$operation(
-            Box::new(Assignment::$first_term_branch($first_term.to_string())),
+        Box::new(IntegerAssignment::$operation(
+            Box::new(IntegerAssignment::$first_term_branch($first_term.to_string())),
             $second_term,
         ))
     };
     ($first_term:expr, $operation:ident, $second_term:expr) => {
-        Box::new(Assignment::$operation(
+        Box::new(IntegerAssignment::$operation(
+            $first_term,
+            $second_term,
+        ))
+    };
+}
+
+macro_rules! feq {
+    ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term_branch:ident($second_term:expr)) => {
+        Box::new(FloatAssignment::$operation(
+            Box::new(FloatAssignment::$first_term_branch($first_term.to_string())),
+            Box::new(Assignment::$second_term_branch($second_term.to_string())),
+        ))
+    };
+    ($first_equation:expr, $operation:ident, $second_term_branch:ident($second_term:expr)) => {
+        Box::new(FloatAssignment::$operation(
+            $first_equation,
+            Box::new(FloatAssignment::$second_term_branch($second_term.to_string())),
+        ))
+    };
+    ($first_term_branch:ident($first_term:expr), $operation:ident, $second_term:expr) => {
+        Box::new(FloatAssignment::$operation(
+            Box::new(FloatAssignment::$first_term_branch($first_term.to_string())),
+            $second_term,
+        ))
+    };
+    ($first_term:expr, $operation:ident, $second_term:expr) => {
+        Box::new(FloatAssignment::$operation(
             $first_term,
             $second_term,
         ))
@@ -67,15 +97,14 @@ macro_rules! eq {
 /// DIV(TERM("1"), TERM("2")) -> divide 1 by 2
 /// TERM("1")                 -> represents a constant (a number litteral)
 #[derive(Debug, Clone)]
-pub enum Assignment {
-    ADD(Box<Assignment>, Box<Assignment>),
-    SUB(Box<Assignment>, Box<Assignment>),
-    MUL(Box<Assignment>, Box<Assignment>),
-    DIV(Box<Assignment>, Box<Assignment>),
-    CONST(String),
+pub enum IntegerAssignment {
+    ADD(Box<IntegerAssignment>, Box<IntegerAssignment>),
+    SUB(Box<IntegerAssignment>, Box<IntegerAssignment>),
+    MUL(Box<IntegerAssignment>, Box<IntegerAssignment>),
+    CONST(i64),
     VAR(usize),
 
-} impl Assignment {
+} impl IntegerAssignment {
     /// Converts a formatted Vec<String> to a nested Declaration orderded using PEMDAS. Each element in the list should
     /// be seperated each symbol/element in an equation
     /// `3 + 4 / 6` -> `["3", "+", "4", "/", "6"]`
@@ -92,26 +121,106 @@ pub enum Assignment {
     /// println!("{declaration:?}");
     /// ```
     pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
+        println!("IntegerAssignment::from_string_vec()");
+        println!("  |- recieved: {string_equation:?}");
+
         if string_equation.len() == 1 {
-            return Ok(Self::CONST(string_equation[0].clone()))
+            return Ok(Self::CONST(string_equation[0].clone().parse().unwrap()))
         }
 
-        let mut first_term  = Box::new(Assignment::CONST(string_equation[0].clone()));
-        let mut second_term = Box::new(Assignment::CONST(string_equation[2].clone()));
+        let first_term: Box<IntegerAssignment>;
+        let second_term: Box<IntegerAssignment>;
 
         if let Some(variable_location) = stack_memory.find_variable(&string_equation[0]) {
-            first_term = Box::new(Assignment::VAR(variable_location))
+            first_term = Box::new(IntegerAssignment::VAR(variable_location));
+        } else {
+            first_term = Box::new(IntegerAssignment::CONST(string_equation[0].clone().parse().unwrap()));
         }
 
         if let Some(variable_location) = stack_memory.find_variable(&string_equation[2]) {
-            second_term = Box::new(Assignment::VAR(variable_location))
+            second_term = Box::new(IntegerAssignment::VAR(variable_location));
+        } else {
+            second_term = Box::new(IntegerAssignment::CONST(string_equation[2].clone().parse().unwrap()));
         }
         
         match string_equation[1].as_str() {
-            "+" => Ok(*eq!(first_term, ADD, second_term)),
-            "-" => Ok(*eq!(first_term, SUB, second_term)),
-            "*" => Ok(*eq!(first_term, MUL, second_term)),
-            "/" => Ok(*eq!(first_term, DIV, second_term)),
+            "+" => Ok(*ieq!(first_term, ADD, second_term)),
+            "-" => Ok(*ieq!(first_term, SUB, second_term)),
+            "*" => Ok(*ieq!(first_term, MUL, second_term)),
+              _ => Err(TokenizerError::IncorrectEquationFormatting), 
+        }
+    }
+
+    pub fn is_const(&self) -> bool {
+        if let Self::CONST(_) = *self {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    pub fn is_var(&self) -> bool {
+        if let Self::VAR(_) = *self {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum FloatAssignment {
+    ADD(Box<FloatAssignment>, Box<FloatAssignment>),
+    SUB(Box<FloatAssignment>, Box<FloatAssignment>),
+    MUL(Box<FloatAssignment>, Box<FloatAssignment>),
+    DIV(Box<FloatAssignment>, Box<FloatAssignment>),
+    CONST(f64),
+    VAR(usize),
+
+} impl FloatAssignment {
+    /// Converts a formatted Vec<String> to a nested Declaration orderded using PEMDAS. Each element in the list should
+    /// be seperated each symbol/element in an equation
+    /// `3 + 4 / 6` -> `["3", "+", "4", "/", "6"]`
+    /// Note that this is primarily meant for parsing variable declarations
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let equation: Vec<String> = vec!["3", "+", "4", "/", "6"]
+    ///     .into_iter().map(|x| x.to_string()).collect()
+    /// let declaration = Assignment::from_string_vec(equation)
+    ///
+    /// // output: ADD((TERM(3), DIV(TERM(4), TERM(6))))
+    /// println!("{declaration:?}");
+    /// ```
+    pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
+        println!("IntegerAssignment::from_string_vec()");
+        println!("  |- recieved: {string_equation:?}");
+
+        if string_equation.len() == 1 {
+            return Ok(Self::CONST(string_equation[0].clone().parse().unwrap()))
+        }
+
+        let first_term: Box<FloatAssignment>;
+        let second_term: Box<FloatAssignment>;
+
+        if let Some(variable_location) = stack_memory.find_variable(&string_equation[0]) {
+            first_term = Box::new(FloatAssignment::VAR(variable_location));
+        } else {
+            first_term = Box::new(FloatAssignment::CONST(string_equation[0].clone().parse().unwrap()));
+        }
+
+        if let Some(variable_location) = stack_memory.find_variable(&string_equation[2]) {
+            second_term = Box::new(FloatAssignment::VAR(variable_location));
+        } else {
+            second_term = Box::new(FloatAssignment::CONST(string_equation[2].clone().parse().unwrap()));
+        }
+        
+        match string_equation[1].as_str() {
+            "+" => Ok(*feq!(first_term, ADD, second_term)),
+            "-" => Ok(*feq!(first_term, SUB, second_term)),
+            "*" => Ok(*feq!(first_term, MUL, second_term)),
+            "/" => Ok(*feq!(first_term, DIV, second_term)),
               _ => Err(TokenizerError::IncorrectEquationFormatting), 
         }
     }
