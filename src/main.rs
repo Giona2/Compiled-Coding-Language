@@ -59,4 +59,16 @@ fn main() {
 }
 
 #[cfg(test)]
-mod testing {}
+mod testing {
+    use std::fs;
+    use crate::optimizer::Optimizer;
+
+    #[test]
+    fn optimize() {
+        // Read from file and flatten it
+        let file_content: String = fs::read_to_string("./examples/syntax_example.txt")
+            .expect("Failed to read file");
+        let optimizer = Optimizer::from_file_content(&file_content);
+        println!("{:?}", optimizer.content);
+    }
+}

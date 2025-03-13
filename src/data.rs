@@ -30,6 +30,8 @@ pub mod syntactic_elements {
         "*",
         "/",
         "-",
+        "<",
+        ">",
 
     ].into_iter().map(|x| x.to_string()).collect()}
 
