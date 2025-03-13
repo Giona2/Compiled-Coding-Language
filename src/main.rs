@@ -1,4 +1,5 @@
 use std::fs;
+use std::process;
 
 
 mod tokenizer;
@@ -18,30 +19,43 @@ mod data;
 
 
 fn main() {
+    // Read from file and flatten it
     let file_content: String = fs::read_to_string("./examples/syntax_example.txt")
         .expect("Failed to read file");
-
     let optimizer = Optimizer::from_file_content(&file_content);
 
+    // Tokenize the flattened content
     let mut tokenizer = Tokenizer::init(8);
     tokenizer.generate_token_tree(&optimizer.content);
     println!("tokenizer: {tokenizer:?}");
 
+    // Essemble the generated token tree
     let mut assembler = Assembler::init();
     assembler.generate_instructions(&tokenizer.token_tree, &tokenizer.stack_memory).unwrap();
     
+    // Write the assembled content to a file
     let program_content = assembler.instructions.join("\n");
-    fs::write("./a.asm", program_content)
+    fs::write("./output.asm", program_content)
         .expect("Failed to write a.asm");
+
+    // Assemble (using nasm/ld) the final assembly file
+    process::Command::new("nasm")
+        .args(["-f", "elf64"])
+        .args(["-g"])
+        .args(["-F", "dwarf"])
+        .args(["output.asm"])
+        .args(["-o", "a.o"])
+        .status().unwrap();
+    process::Command::new("ld")
+        .args(["a.o"])
+        .status().unwrap();
+
+    // Clean up extra files
+    fs::remove_file("a.o")
+        .expect("Failed to remove a.o");
+    //fs::remove_file("output.asm")
+    //    .expect("Failed to remove output.asm");
 }
 
 #[cfg(test)]
-mod testing {
-    #[test]
-    fn number_parsing() {
-        let number_to_parse: String = "3.2".to_string();
-        let result: i32 = number_to_parse.parse()
-            .expect("Failed");
-        println!("result: {}", result);
-    }
-}
+mod testing {}
