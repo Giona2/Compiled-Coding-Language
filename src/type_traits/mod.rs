@@ -3,3 +3,4 @@ pub mod string;
 pub mod str_vec;
 pub mod float_64;
 pub mod hashmap;
+pub mod str_str_hashmap;
