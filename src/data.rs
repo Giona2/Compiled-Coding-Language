@@ -1,3 +1,16 @@
+use std::collections::HashMap;
+
+
+pub struct SyntaxElements {
+    type_names: Vec<String>,
+    type_name_table: HashMap<String, String>,
+    math_symbols: Vec<String>,
+    math_symbol_table: HashMap<String, String>,
+    comparison_symbols: Vec<String>,
+    comparson_symbol_table: HashMap<String, String>,
+} impl SyntaxElements {
+}
+
 pub mod syntactic_elements {
 
     pub mod types {
@@ -34,5 +47,4 @@ pub mod syntactic_elements {
         ">",
 
     ].into_iter().map(|x| x.to_string()).collect()}
-
 }
