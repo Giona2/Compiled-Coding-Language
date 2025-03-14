@@ -1,13 +1,13 @@
 The `Optimizer`'s job is to take the raw script file and convert it into a flattened list  
   
-**For the remainder of this file, we will use the following example script:**  
+# Steps of Operation
+**For the following subheader, we will use the following example script:**  
 *The inconsistent spacing is intentional*
 ```custom
 int x= 1;
 int y =2;
 int result = x + y;
 ```
-# Steps of Operation
 ## Flatten
 The `Optimizer` will first flatten the file content. This is acheived just by replacing all newline and tab characters with spaces
 ___
