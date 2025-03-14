@@ -1,5 +1,5 @@
 use crate::type_traits::string_vec::StringVecExtra;
-use crate::data::syntactic_elements;
+use crate::data::SyntaxElements;
 
 
 #[allow(dead_code)]
