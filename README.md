@@ -3,7 +3,7 @@ This is an experimental project where I create a coding language from scratch (w
 If you're here to critique this repository, please see [Source code deep-dive website for anylizers](https://giona2.github.io/Compiled-Coding-Language/) for a more in-depth explination on my source code
 
 ## Table of Contents
-* [Overview][#overview]
+* [Overview](#overview)
 * [Math Declarations](#math-declarations)
 * [Links](#links)
 
