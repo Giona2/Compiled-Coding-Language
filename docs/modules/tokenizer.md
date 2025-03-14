@@ -8,7 +8,9 @@ vec!["int", "x", "=", "1", ";", "int", "y", "=", "2", ";", "int", "result", "=",
 ```
 ___
 
-The `Tokenizer` will iterate through each word. If it detects a type name, for example, it will retrieve the name, type (obviously), and what it's assigned to. (at the moment, this is pretty much all the compiler can do)  
+The `Tokenizer` will iterate through each word. If it detects a type name, for example, it will retrieve the name, type (obviously), and what it's assigned to  
+*at the moment, this is pretty much all the compiler can do*  
+  
 Using the example above, the compiler would parse it accordingly...
 ```
 "int", "x", "=", "1", ";",
@@ -48,10 +50,6 @@ These parsed statements will then become consecutive tokens
                                         ╰────────────────────────────────────────╯
 ```
 
-# Token Types and Acossiated Enumerators
-For now, the only functioning token is the `Declaration` token, which declares new variables into memory.
-
-
 # Memory Management
 To keep track of integral components like memory, these components each have a `struct` representation.  
 Take memory for example. To keep track of variables, where they're stored, and what name they're assigned to in the script, the compiler has a `StackMemory` struct that tracks all these attributes  
@@ -67,7 +65,7 @@ When a new variable is initialized...
 ╰────────────────────────────────────╯
 ```
 the `Tokenizer` will call `StackMemory` and tell it to add a variable.  
-`StackMemory` indexes the variables as slots with a fixed size. It will search the slots and look for an empty one, then replaces it with the new variable  
+`StackMemory` indexes the variables as slots with a fixed size. It will search the slots and look for an empty one, then replace it with the new variable  
   
 *Since `StackMemory`'s only function is to keep track of where new variables need to be placed in memory, the actual values do not need to be stored in this memory representation*
 ___
@@ -77,7 +75,7 @@ The visual representation would look something like...
 ```
 ___
   
-The `Declaration` token will then ask `StackMemory` to find that variable it just created and give back the index of said variable in the slot list representation
+The `Declaration` token will then ask `StackMemory` to find that variable it just created and give back the index/where it's stored in memory
 ___
 The final declaration would become...
 ```

@@ -28,7 +28,7 @@ int x = 1; int y = 2; int result = x + y;
 ```
 ___
 ## Split Each Space Into a List
-Then, the given content will be split into a list. You may have wondered up until this point why the compiler heavily used spaces to replaced and seperate characters. That was crucial for this step, which will use those spaces to split each word
+Then, the given content will be split into a list by spaces
 ___
 This will return...
 ```rust
