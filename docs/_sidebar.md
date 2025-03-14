@@ -4,3 +4,4 @@
 * [**Modules**]()
   * [- Optimizer](modules/optimizer.md)
   * [- Tokenizer](modules/tokenizer.md)
+  * [- Assembler](modules/assembler.md)

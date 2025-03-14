@@ -10,3 +10,4 @@ Welcome to my compiler's documentation. This wiki is meant to explain the intric
 * [**Modules**]()
   * [- Optimizer](modules/optimizer.md)
   * [- Tokenizer](modules/tokenizer.md)
+  * [- Assembler](modules/assembler.md)
