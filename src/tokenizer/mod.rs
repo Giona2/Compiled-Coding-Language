@@ -40,9 +40,11 @@ pub struct Tokenizer {
     }}
 
     pub fn generate_token_tree(&mut self, optimized_file_content: &Vec<String>) {
+        let syntax_elements = SyntaxElements::init();
+
         for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
             // Variable handling
-            if SyntaxElements::init().get_type_names().contains(current_word) {
+            if syntax_elements.get_type_names().contains(current_word) {
                 self.parse_declaration(current_word, current_word_index, optimized_file_content);
             }
         };
