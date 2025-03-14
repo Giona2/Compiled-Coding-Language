@@ -19,7 +19,7 @@ int x= 1; int y =2; int result = x + y;
 ```
 ___
 ## Space Seperation
-Next, each detected symbol in held in [SyntaxElements](data.rs.md#SyntaxElements) will be proceeded and followed by a space character (if there wasn't one there already).  
+Next, each detected symbol held in [SyntaxElements](data.rs.md#SyntaxElements) will be proceeded and followed by a space character (if there wasn't one there already).  
 This allows users to use inconsistent spacing in their scripts
 ___
 This will return...
