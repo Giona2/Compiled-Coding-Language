@@ -42,7 +42,7 @@ pub struct Tokenizer {
     pub fn generate_token_tree(&mut self, optimized_file_content: &Vec<String>) {
         for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
             // Variable handling
-            if syntactic_elements::types::get_type_names().contains(current_word) {
+            if SyntaxElements::init().get_type_names().contains(current_word) {
                 self.parse_declaration(current_word, current_word_index, optimized_file_content);
             }
         };

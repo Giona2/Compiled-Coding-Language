@@ -26,10 +26,10 @@ use std::collections::HashMap;
 /// ]
 /// ```
 pub struct SyntaxElements {
-    type_name_table: HashMap<String, String>,
-    math_symbol_table: HashMap<String, String>,
-    comparson_symbol_table: HashMap<String, String>,
-    assignment_symbol_table: HashMap<String, String>,
+    pub type_names: HashMap<String, String>,
+    pub math_symbols: HashMap<String, String>,
+    pub comparson_symbols: HashMap<String, String>,
+    pub assignment_symbols: HashMap<String, String>,
 
 } impl SyntaxElements {
     /// Initialize the SyntaxElements
@@ -54,24 +54,24 @@ pub struct SyntaxElements {
     /// ]
     /// ```
     pub fn init() -> Self { Self {
-        type_name_table: hashmap![
+        type_names: hashmap![
             "integer" => "int",
             "float"   => "float",
         ].to_string_hashmap(),
 
-        math_symbol_table: hashmap![
+        math_symbols: hashmap![
             "addition"       => "+",
             "subtraction"    => "-",
             "multiplication" => "*",
             "division"       => "+",
         ].to_string_hashmap(),
 
-        comparson_symbol_table: hashmap![
+        comparson_symbols: hashmap![
             "greater than" => ">",
             "less than"    => "<",
         ].to_string_hashmap(),
 
-        assignment_symbol_table: hashmap![
+        assignment_symbols: hashmap![
             "equals"           => "=",
             "begin body"       => "{",
             "end body"         => "}",
@@ -85,26 +85,26 @@ pub struct SyntaxElements {
     pub fn get_all_elements(&self) -> Vec<String> {
         let mut result = Vec::new();
 
-        for (_, element_name) in self.type_name_table.clone() {
+        for (_, element_name) in self.type_names.clone() {
             result.push(element_name);
         }
 
-        for (_, element_name) in self.math_symbol_table.clone() {
+        for (_, element_name) in self.math_symbols.clone() {
             result.push(element_name);
         }
 
-        for (_, element_name) in self.comparson_symbol_table.clone() {
+        for (_, element_name) in self.comparson_symbols.clone() {
             result.push(element_name);
         }
 
         return result;
     }
 
-    /// Gets every value stored in the type_name_table table
+    /// Gets every value stored in the type_names table
     pub fn get_type_names(&self) -> Vec<String> {
         let mut result = Vec::new();
 
-        for (_, element_name) in self.type_name_table.clone() {
+        for (_, element_name) in self.type_names.clone() {
             result.push(element_name);
         }
 

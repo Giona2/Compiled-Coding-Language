@@ -1,4 +1,4 @@
-use crate::data::syntactic_elements;
+use crate::data::SyntaxElements;
 
 
 pub struct Optimizer {
@@ -16,15 +16,31 @@ pub struct Optimizer {
             let mut result = Vec::new();
 
             for (character_index, character) in script_content_flattened.iter().enumerate() {
-                // If the character is folowed/proceeded by a space, place a space before and after
+                let syntax_elements = SyntaxElements::init();
+
+                // If the character is followed/proceeded by a space, place a space before and after
                 // it
-                if syntactic_elements::get_syntax_chars().contains(&character.to_string()) && script_content_flattened[character_index-1] != ' ' {
-                    let updated_script_content = vec![script_content_flattened[..character_index].to_vec(), [' '].to_vec(), [character.clone()].to_vec(), [' '].to_vec(), script_content_flattened[character_index+1..].to_vec()].concat();
+                if syntax_elements.get_all_elements().contains(&character.to_string()) && script_content_flattened[character_index-1] != ' ' {
+                    let updated_script_content = vec![
+                        script_content_flattened[..character_index].to_vec(), 
+                        [' '].to_vec(), 
+                        [character.clone()].to_vec(), [' '].to_vec(), 
+                        [' '].to_vec(),
+                        script_content_flattened[character_index+1..].to_vec()
+                    ].concat();
+
                     result = get_script_content_seperate_syntax_chars(updated_script_content);
                     break;
                 }
-                else if syntactic_elements::get_syntax_chars().contains(&character.to_string()) && script_content_flattened[character_index+1] != ' ' {
-                    let updated_script_content = vec![script_content_flattened[..character_index].to_vec(), [' '].to_vec(), [character.clone()].to_vec(), [' '].to_vec(), script_content_flattened[character_index+1..].to_vec()].concat();
+                else if syntax_elements.get_all_elements().contains(&character.to_string()) && script_content_flattened[character_index+1] != ' ' {
+                    let updated_script_content = vec![
+                        script_content_flattened[..character_index].to_vec(),
+                        [' '].to_vec(),
+                        [character.clone()].to_vec(),
+                        [' '].to_vec(),
+                        script_content_flattened[character_index+1..].to_vec()
+                    ].concat();
+
                     result = get_script_content_seperate_syntax_chars(updated_script_content);
                     break;
                 }

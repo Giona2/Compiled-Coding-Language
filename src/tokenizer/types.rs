@@ -1,5 +1,5 @@
 use super::error::TokenizerError;
-use crate::data::syntactic_elements;
+use crate::data::SyntaxElements;
 use super::representations::StackMemory;
 
 
@@ -9,10 +9,10 @@ pub enum DataType {
     FLOAT,
 
 } impl DataType {
-    pub fn check_token_type(word_to_check: &str) -> Option<Self> { match word_to_check {
-        syntactic_elements::types::INTEGER => Some(Self::INTEGER),
-        syntactic_elements::types::FLOAT   => Some(Self::FLOAT),
-                                         _ => None,
+    pub fn check_token_type(word_to_check: &str) -> Option<Self> { let syntax_elements = SyntaxElements::init(); match word_to_check {
+        val if val == syntax_elements.type_names["integer"] => Some(Self::INTEGER),
+        val if val == syntax_elements.type_names["float"]   => Some(Self::FLOAT),
+                                                          _ => None,
     }}
 }
 
