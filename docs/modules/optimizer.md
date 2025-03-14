@@ -1,4 +1,4 @@
-The optimizer's job is to take the raw script file and convert it into a flattened list  
+The `Optimizer`'s job is to take the raw script file and convert it into a flattened list  
 This is the most simplistic module in this compiler, hence the documentation file will most likely be rather short  
   
 **For the remainder of this file, we will use the following example script:**  
