@@ -97,6 +97,10 @@ pub struct SyntaxElements {
             result.push(element_name);
         }
 
+        for (_, element_name) in self.assignment_symbols.clone() {
+            result.push(element_name);
+        }
+
         return result;
     }
 
