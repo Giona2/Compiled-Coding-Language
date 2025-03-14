@@ -25,7 +25,6 @@ pub struct Optimizer {
                         script_content_flattened[..character_index].to_vec(), 
                         [' '].to_vec(), 
                         [character.clone()].to_vec(), [' '].to_vec(), 
-                        [' '].to_vec(),
                         script_content_flattened[character_index+1..].to_vec()
                     ].concat();
 
@@ -35,7 +34,6 @@ pub struct Optimizer {
                 else if syntax_elements.get_all_elements().contains(&character.to_string()) && script_content_flattened[character_index+1] != ' ' {
                     let updated_script_content = vec![
                         script_content_flattened[..character_index].to_vec(),
-                        [' '].to_vec(),
                         [character.clone()].to_vec(),
                         [' '].to_vec(),
                         script_content_flattened[character_index+1..].to_vec()
