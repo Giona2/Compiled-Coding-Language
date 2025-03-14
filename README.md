@@ -21,9 +21,9 @@ ___
 
 ## Math Declarations
 It can also perform basic arithmetic with numbers and stored variables with `+`, `-`, `*`, `/`  
-This compiler will only perform one math operation at a time. It does not support equation parsing
-**Note that the `/` operator only works with floating point numbers. `int i = 1/2;` will return an error.**  
-**`float i = 1/2` will parse and execute correctly**
+This compiler will only perform one math operation at a time. It does not support equation parsing  
+*Note that the `/` operator only works with floating point numbers. `int i = 1/2;` will return an error.*  
+*`float i = 1/2` will parse and execute correctly*
 ___
 For example...
 ```custom
