@@ -27,7 +27,6 @@ fn main() {
     // Tokenize the flattened content
     let mut tokenizer = Tokenizer::init(8);
     tokenizer.generate_token_tree(&optimizer.content);
-    println!("tokenizer: {tokenizer:?}");
 
     // Essemble the generated token tree
     let mut assembler = Assembler::init();
