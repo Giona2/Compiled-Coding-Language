@@ -1,4 +1,4 @@
-use crate::type_traits::string_vec::StringVecExtra;
+use crate::type_traits::vector::StringVecExtra;
 use crate::data::SyntaxElements;
 
 

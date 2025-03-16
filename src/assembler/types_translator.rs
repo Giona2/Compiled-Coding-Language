@@ -1,6 +1,6 @@
 use crate::tokenizer::types::{FloatAssignment, IntegerAssignment};
 use crate::tokenizer::representations::StackMemory;
-use crate::type_traits::float_64::F64Extra;
+use crate::type_traits::float::F64Extra;
 
 use super::error::AssemblerError;
 

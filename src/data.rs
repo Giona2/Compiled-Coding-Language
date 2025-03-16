@@ -1,5 +1,5 @@
 use crate::hashmap;
-use crate::type_traits::str_str_hashmap::StrStrHashMapExtra;
+use crate::type_traits::hashmap::StrStrHashMapExtra;
 
 use std::collections::HashMap;
 

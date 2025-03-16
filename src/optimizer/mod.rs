@@ -1,5 +1,5 @@
 use crate::data::SyntaxElements;
-use crate::type_traits::string_vec::StringVecExtra;
+use crate::type_traits::vector::StringVecExtra;
 
 
 pub struct Optimizer {
