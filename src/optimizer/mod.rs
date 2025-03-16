@@ -15,6 +15,7 @@ pub struct Optimizer {
         let script_content_seperate_syntax_chars = String::new();
 
         for (character_index, character) in script_content_flattened.iter().enumerate() {
+            // first check if char is the start to a multi-char symbol
         }
 
         // Split by spaces

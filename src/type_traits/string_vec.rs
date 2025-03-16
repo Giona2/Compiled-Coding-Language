@@ -23,6 +23,36 @@ pub trait StringVecExtra {
     /// let index_of_3: Vec<String> = my_vec.find("3")
     /// ```
     fn find(&self, pattern: &str) -> Option<usize>;
+
+    /// Returns a reordered version of this `Vec<String>` where the longest string is at index `0`
+    /// and the smallest string is at the last index
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let my_vec: Vec<String> = vec!["hello there", "hi", "hello",];
+    ///
+    /// let ordered_vec = my_vec.sort_by_size();
+    ///
+    /// // vec!["hello there", "hello", "hi"]
+    /// println!("{ordered_vec:?");
+    /// ```
+    fn sort_by_size(&self) -> Vec<String>;
+
+    /// Returns a reordored version of this `Vec<String>` where the two indexes specified switch
+    /// places
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let my_vec: Vec<String> = vec!["1", "2", "3", "4"];
+    ///
+    /// let ordered_vec = my_vec.swap_elements(1, 3);
+    ///
+    /// // vec!["1", "4", "3", "2"]
+    /// println!("{ordered_vec:?}");
+    /// ```
+    fn swap_elements(&self, first: usize, second: usize) -> Vec<String>;
 }
 
 impl StringVecExtra for Vec<String> {
@@ -52,5 +82,46 @@ impl StringVecExtra for Vec<String> {
         }
 
         return result
+    }
+
+    fn sort_by_size(&self) -> Vec<String> {
+        fn sort_by_size_recur(vector: Vec<String>, current_index: usize) -> Vec<String> {
+            if current_index == vector.len() - 1 {
+                return vector
+            } else {
+                let mut largest_element_len: usize = 0;
+                let mut largest_element_index: usize = 0;
+
+                let mut i: usize = current_index;
+                while i < vector.len() {
+                    let current_element_chars: Vec<char> = vector[i].chars().collect();
+
+                    if current_element_chars.len() > largest_element_len {
+                        largest_element_len = current_element_chars.len();
+                        largest_element_index = i;
+                    }
+
+                    i += 1;
+                }
+
+                let updated_vector = vector.swap_elements(current_index, largest_element_index);
+
+                return sort_by_size_recur(updated_vector, current_index+1);
+            }
+        }
+
+        return sort_by_size_recur(self.clone(), 0);
+    }
+
+    fn swap_elements(&self, first: usize, second: usize) -> Vec<String> {
+        let first_element = self[first].clone();
+        let second_element = self[second].clone();
+
+        let mut result = self.clone();
+
+        result[first] = second_element;
+        result[second] = first_element;
+        
+        return result;
     }
 }

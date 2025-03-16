@@ -59,15 +59,20 @@ fn main() {
 
 #[cfg(test)]
 mod testing {
-    use std::fs;
-    use crate::optimizer::Optimizer;
+    use crate::type_traits::string_vec::StringVecExtra;
 
     #[test]
-    fn optimize() {
-        // Read from file and flatten it
-        let file_content: String = fs::read_to_string("./examples/syntax_example.txt")
-            .expect("Failed to read file");
-        let optimizer = Optimizer::from_file_content(&file_content);
-        println!("{:?}", optimizer.content);
+    fn sort() {
+        let vector: Vec<String> = vec![
+            "1",
+            "11",
+            "121",
+            "12321",
+            "1234321",
+        ].iter().map(|x| x.to_string()).collect();
+
+        let sorted_vector = vector.sort_by_size();
+
+        println!("{sorted_vector:?}")
     }
 }
