@@ -66,6 +66,7 @@ mod testing {
         let vector: Vec<String> = vec![
             "1",
             "11",
+            "12",
             "121",
             "12321",
             "1234321",
