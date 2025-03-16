@@ -28,7 +28,6 @@ use std::collections::HashMap;
 pub struct SyntaxElements {
     pub type_names: HashMap<String, String>,
     pub math_symbols: HashMap<String, String>,
-    pub comparson_symbols: HashMap<String, String>,
     pub assignment_symbols: HashMap<String, String>,
 
 } impl SyntaxElements {
@@ -55,8 +54,9 @@ pub struct SyntaxElements {
     /// ```
     pub fn init() -> Self { Self {
         type_names: hashmap![
-            "integer" => "int",
-            "float"   => "float",
+            "integer"   => "int",
+            "float"     => "flt",
+            "character" => "chr",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![
@@ -66,18 +66,13 @@ pub struct SyntaxElements {
             "division"       => "+",
         ].to_string_hashmap(),
 
-        comparson_symbols: hashmap![
-            "greater than" => ">",
-            "less than"    => "<",
-        ].to_string_hashmap(),
-
         assignment_symbols: hashmap![
             "equals"           => "=",
-            "begin body"       => "{",
-            "end body"         => "}",
+            "begin body"       => ":",
+            "end body"         => ";",
             "end assignment"   => ";",
-            "begin conditions" => "(",
-            "end conditions"   => ")",
+            "begin conditions" => "::[",
+            "end conditions"   => "]",
         ].to_string_hashmap(),
     }}
 
