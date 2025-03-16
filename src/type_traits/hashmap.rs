@@ -17,10 +17,6 @@ pub trait StrStrHashMapExtra {
     /// Converts a `HashMap<&str, &str>` to a `HashMap<String, String>`
     fn to_string_hashmap(&self) -> HashMap<String, String>;
 
-    /// Gets every value held in this HashMap as a Vec<String> of a given size/len
-    fn values_of_size(&self, size: usize) -> Vec<String>;
-
-    fn len_of_largest(&self) -> usize;
 } impl StrStrHashMapExtra for HashMap<&str, &str> {
     fn to_string_hashmap(&self) -> HashMap<String, String> {
         let mut result: HashMap<String, String> = HashMap::new();
@@ -32,13 +28,25 @@ pub trait StrStrHashMapExtra {
         return result
     }
 
+}
+
+
+pub trait StringStringHashMapExtra {
+    /// Gets every value held in this HashMap as a Vec<String> of a given size/len
+    fn values_of_size(&self, size: usize) -> Vec<String>;
+
+    fn len_of_largest(&self) -> usize;
+
+    fn values_contains(&self, target: &str) -> bool;
+
+} impl StringStringHashMapExtra for HashMap<String, String> {
     fn values_of_size(&self, size: usize) -> Vec<String> {
         let mut result = Vec::new();
 
         for value in self.values() {
             let value_chars: Vec<char> = value.chars().collect();
 
-            if value_chars.len() == size { result.push(value.to_string()); }
+            if value_chars.len() == size { result.push(value.to_owned()); }
         }
 
         return result;
@@ -51,6 +59,16 @@ pub trait StrStrHashMapExtra {
             let value_chars: Vec<char> = value.chars().collect();
 
             if value_chars.len() > result { result = value_chars.len() }
+        }
+
+        return result
+    }
+
+    fn values_contains(&self, target: &str) -> bool {
+        let mut result = false;
+
+        for value in self.values() {
+            if value == target { result = true; break }
         }
 
         return result

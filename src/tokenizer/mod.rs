@@ -44,9 +44,9 @@ pub struct Tokenizer {
 
         for (current_word_index, current_word) in optimized_file_content.iter().enumerate() {
             // Variable handling
-            if syntax_elements.get_type_names().contains(current_word) {
-                self.parse_declaration(current_word, current_word_index, optimized_file_content);
-            }
+            //if syntax_elements.get_type_names().contains(current_word) {
+            //    self.parse_declaration(current_word, current_word_index, optimized_file_content);
+            //}
         };
     }
 

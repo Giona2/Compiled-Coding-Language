@@ -20,7 +20,7 @@ mod data;
 
 fn main() {
     // Read from file and flatten it
-    let file_content: String = fs::read_to_string("./examples/syntax_example.txt")
+    let file_content: String = fs::read_to_string("./examples/syntax_example.uml")
         .expect("Failed to read file");
     let optimizer = Optimizer::from_file_content(&file_content);
 
@@ -59,21 +59,16 @@ fn main() {
 
 #[cfg(test)]
 mod testing {
-    use crate::type_traits::string_vec::StringVecExtra;
+    use crate::optimizer::Optimizer;
+    use std::fs;
 
     #[test]
     fn sort() {
-        let vector: Vec<String> = vec![
-            "1",
-            "11",
-            "12",
-            "121",
-            "12321",
-            "1234321",
-        ].iter().map(|x| x.to_string()).collect();
+        // Read from file and flatten it
+        let file_content: String = fs::read_to_string("./examples/syntax_example.uml")
+            .expect("Failed to read file");
+        let optimizer = Optimizer::from_file_content(&file_content);
 
-        let sorted_vector = vector.sort_by_size();
-
-        println!("{sorted_vector:?}")
+        println!("{:?}", optimizer.content);
     }
 }

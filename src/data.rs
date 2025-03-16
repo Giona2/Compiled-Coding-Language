@@ -71,9 +71,10 @@ pub struct SyntaxElements {
             "equals"           => "=",
             "begin body"       => ":",
             "end body"         => ";",
-            "end assignment"   => ";",
+            "end assignment"   => "\n",
             "begin conditions" => "::[",
             "end conditions"   => "]",
+            "return type"      => "->",
         ].to_string_hashmap(),
     }}
 
@@ -84,6 +85,20 @@ pub struct SyntaxElements {
         for (_, element_name) in self.type_names.clone() {
             result.push(element_name);
         }
+
+        for (_, element_name) in self.math_symbols.clone() {
+            result.push(element_name);
+        }
+
+        for (_, element_name) in self.assignment_symbols.clone() {
+            result.push(element_name);
+        }
+
+        return result;
+    }
+
+    pub fn get_all_symbols(&self) -> Vec<String> {
+        let mut result = Vec::new();
 
         for (_, element_name) in self.math_symbols.clone() {
             result.push(element_name);

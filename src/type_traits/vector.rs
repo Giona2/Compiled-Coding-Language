@@ -69,6 +69,22 @@ pub trait StringVecExtra {
     /// println!("{ordered_vec:?}");
     /// ```
     fn swap_elements(&self, first: usize, second: usize) -> Vec<String>;
+
+    /// Checks if the given `char` is the first `char` in one of the elements
+    ///
+    /// If so, this will return (true, Some(index of first matched element))
+    ///
+    /// If not, this will return (false, None)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let my_vec: Vec<String> = vec!["one", "two", "three"];
+    ///
+    /// // (true, Some(1))
+    /// println!("{:?}", my_vec.is_start_to_element('t').0);
+    /// ```
+    fn is_start_to_element(&self, target: char) -> (bool, Option<usize>);
 }
 
 impl StringVecExtra for Vec<String> {
@@ -139,5 +155,22 @@ impl StringVecExtra for Vec<String> {
         result[second] = first_element;
         
         return result;
+    }
+
+    fn is_start_to_element(&self, target: char) -> (bool, Option<usize>) {
+        let mut result = false;
+        let mut result_index: Option<usize> = None;
+
+        for (element_index, element) in self.iter().enumerate() {
+            let element_chars: Vec<char> = element.chars().collect();
+
+            if element_chars[0] == target {
+                result = true;
+                result_index = Some(element_index);
+                break
+            }
+        }
+
+        return (result, result_index)
     }
 }
