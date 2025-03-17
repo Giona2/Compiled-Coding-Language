@@ -178,7 +178,7 @@ impl AssignmentToAssembly for FloatAssignment {
             ]
         }
         Self::CONST(constant)        => { return vec![
-            format!("  mov rax, {}", constant),
+            format!("  mov rax, __float64__({})", constant.to_assembly_value()),
         ].iter().map(|x| x.to_string()).collect()}
         Self::VAR(variable_location) => { return vec![
             format!("  mov rax, QWORD [rbp-{}]", stack_memory.step * (variable_location+1)),

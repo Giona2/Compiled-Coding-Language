@@ -76,6 +76,7 @@ impl Assembler {
 
         Assignment::FLOAT(float_assignment) => {
             let assignment_instructions = float_assignment.to_assembly(stack_memory);
+            println!("assignment_instructions: {:?}", assignment_instructions);
 
             let appended_instructions: Vec<String> = vec![
                 vec![
