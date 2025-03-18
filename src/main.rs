@@ -20,13 +20,14 @@ mod data;
 
 fn main() {
     // Read from file and flatten it
-    let file_content: String = fs::read_to_string("./examples/test.uml")
+    let file_content: String = fs::read_to_string("./examples/main.uml")
         .expect("Failed to read file");
-    let optimizer = Optimizer::from_file_content(&file_content);
+    let mut optimizer = Optimizer::init();
+    optimizer.generate_optimized_content(&file_content);
 
     // Tokenize the flattened content
     let mut tokenizer = Tokenizer::init(8);
-    tokenizer.generate_token_tree(&optimizer.content);
+    tokenizer.create_token_tree(&optimizer.content);
     println!("Token Tree: {:?}", tokenizer.token_tree);
 
     // Essemble the generated token tree
@@ -61,15 +62,20 @@ fn main() {
 #[cfg(test)]
 mod testing {
     use crate::optimizer::Optimizer;
+    use crate::tokenizer::Tokenizer;
     use std::fs;
 
     #[test]
-    fn sort() {
+    fn test() {
         // Read from file and flatten it
-        let file_content: String = fs::read_to_string("./examples/syntax_example.uml")
+        let file_content: String = fs::read_to_string("./examples/main.uml")
             .expect("Failed to read file");
-        let optimizer = Optimizer::from_file_content(&file_content);
+        let mut optimizer = Optimizer::init();
+        optimizer.generate_optimized_content(&file_content);
 
-        println!("{:?}", optimizer.content);
+        // Tokenize the flattened content
+        let mut tokenizer = Tokenizer::init(8);
+        tokenizer.create_token_tree(&optimizer.content);
+        println!("Token Tree: {:?}", tokenizer.token_tree);
     }
 }

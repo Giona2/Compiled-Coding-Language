@@ -74,7 +74,7 @@ pub struct SyntaxElements {
             "end assignment"   => "\n",
             "begin conditions" => "::[",
             "end conditions"   => "]",
-            "return type"      => "->",
+            "return this"      => "->",
         ].to_string_hashmap(),
     }}
 

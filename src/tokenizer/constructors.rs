@@ -5,10 +5,10 @@ use super::types::DataType;
 
 #[derive(Debug)]
 pub struct Function {
-    name: String,
-    return_type: DataType,
-    args: Vec<String>,
-    functionaliy: Vec<Token>,
+    pub name: String,
+    pub return_type: DataType,
+    pub args: Vec<String>,
+    pub functionaliy: Vec<Token>,
 
 } impl Function {
     #[allow(dead_code)]
