@@ -181,30 +181,52 @@ pub struct Tokenizer {
     }
 
     fn parse_function(&self, declaration: Vec<String>) -> Token {
+        println!("coding_language::tokenizer::Tokenizer::parse_function()");
+
+        // Get necessary characters
         let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
             .unwrap();
         let return_this_char = self.syntax_elements.assignment_symbols.get("return this")
             .unwrap();
+        let begin_conditions_char = self.syntax_elements.assignment_symbols.get("begin conditions")
+            .unwrap();
+        let end_conditions_char = self.syntax_elements.assignment_symbols.get("end conditions")
+            .unwrap();
 
+        // Get the indexes of the necessary characters
         let block_start_index = declaration.find(&block_start_char).unwrap();
         let return_this_index = declaration.find(&return_this_char).unwrap();
+        let begin_conditions_index = declaration.find(&begin_conditions_char).unwrap();
+        let end_conditions_index = declaration.find(&end_conditions_char).unwrap();
 
-        let inline_block = declaration[block_start_index+1..].to_vec();
+        // Get the function block and given argument slices
+        let inline_block_slice = declaration[block_start_index+1..].to_vec();
+        let argument_slice_raw = declaration[begin_conditions_index+1..=end_conditions_index-1].to_vec();
+        let argument_slice: Vec<&[String]> = argument_slice_raw.split(|x| x==",").collect();
 
+        // Parse the function with the given infomation
         let name = declaration[1].to_string();
         let return_type_text = declaration[return_this_index+1].to_owned();
         let return_type = DataType::check_token_type(&return_type_text).unwrap();
         let mut memory = StackMemory::init(MEMORY_STEP);
-        let inline_block_tokenized = self.generate_token_tree(&mut memory, &inline_block);
+        let inline_block = self.generate_token_tree(&mut memory, &inline_block_slice);
 
+        // Parse the arguments by iterating over each of them
+        let mut arguments: Vec<Argument> = Vec::new();
+        for argument in argument_slice {
+            arguments.push( Argument::from_string_vec(argument.to_vec()) );
+        }
+
+        // Construct the function
         let function = Function {
             name,
             return_type,
             memory,
             args: Vec::new(),
-            functionaliy: inline_block_tokenized,
+            functionaliy: inline_block,
         };
 
+        // Return it
         return Token::FUNCTION(function)
     }
 }

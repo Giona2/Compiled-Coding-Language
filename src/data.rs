@@ -71,15 +71,16 @@ pub struct SyntaxElements {
         ].to_string_hashmap(),
 
         assignment_symbols: hashmap![
-            "equals"           => "=",
-            "begin body"       => ":",
-            "end body"         => ";",
-            "end assignment"   => "\n",
-            "begin conditions" => "::[",
-            "end conditions"   => "]",
-            "return this"      => "->",
-        ].to_string_hashmap(),
-    }}
+            "equals"              => "=",
+            "begin body"          => ":",
+            "end body"            => ";",
+            "end assignment"      => "\n",
+            "begin conditions"    => "::[",
+            "condition seperator" => ",",
+            "end conditions"      => "]",
+            "return this"         => "->",
+        ].to_string_hashmap(), 
+    }}                         
 
     /// Gets every value held in every HashMap as a Vec<String>
     pub fn get_all_elements(&self) -> Vec<String> {

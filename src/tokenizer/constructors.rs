@@ -8,20 +8,21 @@ use super::types::DataType;
 pub struct Function {
     pub name: String,
     pub return_type: DataType,
-    pub args: Vec<String>,
+    pub args: Vec<Argument>,
     pub memory: StackMemory,
     pub functionaliy: Vec<Token>,
-
-} impl Function {
-    #[allow(dead_code)]
-    pub fn new(name: &str, return_type: DataType, stack_memory_step: usize, args: Vec<&str>) -> Self { return Self {
-        name: name.to_string(),
-        return_type,
-        memory: StackMemory::init(stack_memory_step),
-        args: args.into_iter().map(|x| x.to_string()).collect(),
-        functionaliy: Vec::new(),
+}
+#[derive(Debug, Clone)]
+pub struct Argument {
+    pub name: String,
+    pub data_type: DataType,
+} impl Argument {
+    pub fn from_string_vec(from: Vec<String>) -> Self { Self {
+        name: from[1].clone(),
+        data_type: DataType::check_token_type(&from[0]).unwrap(),
     }}
 }
+
 
 #[derive(Debug)]
 pub struct TerminatingLoop {}
@@ -32,5 +33,4 @@ pub struct Declaration {
     pub location: usize,
     pub data_type: DataType,
     pub value: Option<Assignment>,
-
 }
