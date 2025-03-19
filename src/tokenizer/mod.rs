@@ -203,6 +203,7 @@ pub struct Tokenizer {
         let inline_block_slice = declaration[block_start_index+1..].to_vec();
         let argument_slice_raw = declaration[begin_conditions_index+1..=end_conditions_index-1].to_vec();
         let argument_slice: Vec<&[String]> = argument_slice_raw.split(|x| x==",").collect();
+        println!("  argument_slice: {:?}", argument_slice);
 
         // Parse the function with the given infomation
         let name = declaration[1].to_string();
@@ -213,16 +214,17 @@ pub struct Tokenizer {
 
         // Parse the arguments by iterating over each of them
         let mut arguments: Vec<Argument> = Vec::new();
-        for argument in argument_slice {
+        if argument_slice[0].len() > 0 { for argument in argument_slice {
             arguments.push( Argument::from_string_vec(argument.to_vec()) );
-        }
+        }}
+        
 
         // Construct the function
         let function = Function {
             name,
             return_type,
             memory,
-            args: Vec::new(),
+            args: arguments,
             functionaliy: inline_block,
         };
 

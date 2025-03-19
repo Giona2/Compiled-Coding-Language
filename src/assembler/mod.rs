@@ -12,6 +12,9 @@ pub mod types_translator;
     use types_translator::AssignmentToAssembly;
 
 
+const FUNCTION_ARGUMENT_REGISTERS: [&str; 6] = ["rdi", "rsi", "rdx", "r10", "r8", "r9"];
+
+
 pub struct Assembler {
     pub instructions: Vec<String>
 }
@@ -72,7 +75,6 @@ impl Assembler {
     fn assemble_declaration(&self, stack_memory: &StackMemory, declaration: &Declaration) -> Vec<String> { match declaration.clone().value.unwrap() {
         Assignment::INTEGER(integer_assignment) => {
             let assignment_instructions = integer_assignment.to_assembly(stack_memory);
-
             let appended_instructions: Vec<String> = vec![
                 vec![
                     format!("  sub rsp, {}", stack_memory.step),

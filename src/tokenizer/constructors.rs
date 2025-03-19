@@ -17,7 +17,7 @@ pub struct Argument {
     pub name: String,
     pub data_type: DataType,
 } impl Argument {
-    pub fn from_string_vec(from: Vec<String>) -> Self { Self {
+    pub fn from_string_vec(from: Vec<String>) -> Self { println!("coding_language::tokenizer::constructors::Argument::from_string_vec()\n  recieved: {:?}", from); Self {
         name: from[1].clone(),
         data_type: DataType::check_token_type(&from[0]).unwrap(),
     }}
