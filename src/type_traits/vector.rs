@@ -84,13 +84,6 @@ pub trait StringVecExtra {
     /// println!("{:?}", my_vec.is_start_to_element('t').0);
     /// ```
     fn is_start_to_element(&self, target: char) -> (bool, Option<usize>);
-
-    /// Copies all the elements of `other` into `self`
-    ///
-    /// Overrides the original append function to allow `other` to not change
-    ///
-    /// # Examples
-    fn append(&mut self, other: &Vec<String>);
 }
 
 impl StringVecExtra for Vec<String> {
@@ -173,9 +166,5 @@ impl StringVecExtra for Vec<String> {
         }
 
         return (result, result_index)
-    }
-
-    fn append(&mut self, other: &Vec<String>) {
-        for element in other { self.push(element.to_owned()); }
     }
 }

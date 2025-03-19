@@ -26,13 +26,13 @@ fn main() {
     optimizer.generate_optimized_content(&file_content);
 
     // Tokenize the flattened content
-    let mut tokenizer = Tokenizer::init(8);
+    let mut tokenizer = Tokenizer::init();
     tokenizer.create_token_tree(&optimizer.content);
     println!("Token Tree: {:?}", tokenizer.token_tree);
 
     // Essemble the generated token tree
     let mut assembler = Assembler::init();
-    assembler.generate_instructions(&tokenizer.token_tree, &tokenizer.stack_memory).unwrap();
+    assembler.generate_instructions(&tokenizer.token_tree).unwrap();
     
     // Write the assembled content to a file
     let program_content = assembler.instructions.join("\n");

@@ -1,6 +1,6 @@
 use crate::type_traits::vector::StringVecExtra;
 use crate::type_traits::hashmap::StringStringHashMapExtra;
-use crate::data::SyntaxElements;
+use crate::data::{SyntaxElements, MEMORY_STEP};
 
 
 #[allow(dead_code)]
@@ -31,23 +31,20 @@ pub enum Token {
 
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
-    pub stack_memory: StackMemory,
 
     syntax_elements: SyntaxElements,
 
 } impl Tokenizer {
-    pub fn init(stack_memory_step: usize) -> Self { Self {
+    pub fn init() -> Self { Self {
         token_tree: Vec::new(),
-        stack_memory: StackMemory::init(stack_memory_step),
 
         syntax_elements: SyntaxElements::init(),
     }}
 
     pub fn create_token_tree(&mut self, optimized_file_content: &Vec<String>) {
-        let mut stack_memory = StackMemory::init(self.stack_memory.step);
+        let mut stack_memory = StackMemory::init(MEMORY_STEP);
         let token_tree = self.generate_token_tree(&mut stack_memory, optimized_file_content);
 
-        self.stack_memory = stack_memory;
         self.token_tree = token_tree;
     }
 
@@ -111,7 +108,7 @@ pub struct Tokenizer {
                     let declaration_to_evaluate = content_to_tokenize[i..=declaration_stop_index].to_vec();
 
                     // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_function(stack_memory, declaration_to_evaluate);
+                    let created_token = self.parse_function(declaration_to_evaluate);
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -139,7 +136,7 @@ pub struct Tokenizer {
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
         let data_type = DataType::check_token_type(&declaration[0]).unwrap();
-        let assignment = IntegerAssignment::from_string_vec(&self.stack_memory, string_assignment).unwrap();
+        let assignment = IntegerAssignment::from_string_vec(stack_memory, string_assignment).unwrap();
 
         // Add it to representation stack_memory
         stack_memory.add_variable(&name, data_type.clone())
@@ -166,7 +163,7 @@ pub struct Tokenizer {
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
         let data_type = DataType::check_token_type(&declaration[0]).unwrap();
-        let assignment = FloatAssignment::from_string_vec(&self.stack_memory, string_assignment).unwrap();
+        let assignment = FloatAssignment::from_string_vec(stack_memory, string_assignment).unwrap();
  
         // Add it to representation stack_memory
         stack_memory.add_variable(&name, data_type.clone())
@@ -183,7 +180,7 @@ pub struct Tokenizer {
         return Token::DECLARATION(declaration)
     }
 
-    fn parse_function(&self, stack_memory: &mut StackMemory, declaration: Vec<String>) -> Token {
+    fn parse_function(&self, declaration: Vec<String>) -> Token {
         let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
             .unwrap();
         let return_this_char = self.syntax_elements.assignment_symbols.get("return this")
@@ -197,11 +194,13 @@ pub struct Tokenizer {
         let name = declaration[1].to_string();
         let return_type_text = declaration[return_this_index+1].to_owned();
         let return_type = DataType::check_token_type(&return_type_text).unwrap();
-        let inline_block_tokenized = self.generate_token_tree(stack_memory, &inline_block);
+        let mut memory = StackMemory::init(MEMORY_STEP);
+        let inline_block_tokenized = self.generate_token_tree(&mut memory, &inline_block);
 
         let function = Function {
             name,
             return_type,
+            memory,
             args: Vec::new(),
             functionaliy: inline_block_tokenized,
         };

@@ -4,6 +4,9 @@ use crate::type_traits::hashmap::StrStrHashMapExtra;
 use std::collections::HashMap;
 
 
+pub const MEMORY_STEP: usize = 8;
+
+
 /// Holds every syntactic character in the form of a HashMap
 ///
 /// SyntaxElements holds a HashMap for each family of syntactic characters

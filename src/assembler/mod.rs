@@ -20,7 +20,7 @@ impl Assembler {
         instructions: Vec::new(),
     }}
 
-    pub fn generate_instructions(&mut self, token_tree: &Vec<Token>, stack_memory: &StackMemory) -> Result<(), AssemblerError> {
+    pub fn generate_instructions(&mut self, token_tree: &Vec<Token>) -> Result<(), AssemblerError> {
         // Write the program's entry point
         let mut program_instructions: Vec<String> = vec![
             "global _start",
@@ -35,7 +35,7 @@ impl Assembler {
 
         // Iterate over each token and translate it accordingly
         for token in token_tree.iter() { match token {
-            Token::FUNCTION(function) => program_instructions.append(&mut self.assemble_function(stack_memory, function)),
+            Token::FUNCTION(function) => program_instructions.append(&mut self.assemble_function(function)),
             _ => {}
         }}
 
@@ -44,12 +44,27 @@ impl Assembler {
         return Ok(())
     }
 
-    fn assemble_function(&self, stack_memory: &StackMemory, function: &Function) -> Vec<String> {
-        let function_instructions: Vec<String> = vec![
+    fn assemble_function(&self, function: &Function) -> Vec<String> {
+        let mut function_instructions: Vec<String> = vec![
             format!("{}:", function.name),
             format!("  push rbp"),
             format!("  mov rbp, rsp"),
         ];
+
+        for token in function.functionaliy.iter() { match token {
+            Token::DECLARATION(declaration) => {
+                function_instructions.append(&mut self.assemble_declaration(&function.memory, declaration));
+            }
+            _ => {}
+        }}
+
+        function_instructions.append(&mut vec![
+            format!(".end:"),
+            format!("  mov rsp, rbp"),
+            format!("  pop rbp"),
+            format!("  ret"),
+            format!(""),
+        ]);
 
         return function_instructions
     }
