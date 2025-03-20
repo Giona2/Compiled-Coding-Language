@@ -1,4 +1,4 @@
-use crate::tokenizer::enumerators::{FloatAssignment, IntegerAssignment};
+use crate::tokenizer::enumerators::{Assignment, FloatAssignment, IntegerAssignment};
 use crate::tokenizer::structures::VariableHistory;
 use crate::type_traits::float::F64Extra;
 
@@ -79,6 +79,7 @@ pub trait AssignmentToAssembly {
     fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError>;
 }
 
+
 impl AssignmentToAssembly for IntegerAssignment {
     fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
         Self::ADD(term_1, term_2)    => {
@@ -105,7 +106,7 @@ impl AssignmentToAssembly for IntegerAssignment {
 
             return vec![
                 format!("  mov rax, {}", term_1_value),
-                format!("  mul {}", term_2_value),
+                format!("  imul rax, {}", term_2_value),
             ]
         }
         Self::CONST(constant)        => { return vec![
@@ -190,4 +191,15 @@ impl AssignmentToAssembly for FloatAssignment {
         FloatAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
                                               _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
     }}
+}
+
+impl AssignmentToAssembly for Assignment {
+    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
+        Assignment::FLOAT(float_assignent)      => { return float_assignent.to_assembly(stack_memory) }
+        Assignment::INTEGER(integer_assignment) => { return integer_assignment.to_assembly(stack_memory) }
+    }}
+
+    fn term_to_assembly_value(&self, _: &VariableHistory) -> Result<String, AssemblerError> {
+        panic!("Not compatible")
+    }
 }

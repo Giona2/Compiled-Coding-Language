@@ -1,10 +1,7 @@
 use std::vec;
 
 use crate::tokenizer::{
-    declaration::Declaration,
-    function::Function,
-    structures::VariableHistory,
-    enumerators::Assignment, Token
+    declaration::Declaration, enumerators::Assignment, function::{Function, Return}, structures::VariableHistory, Token
 };
 
 
@@ -79,6 +76,9 @@ impl Assembler {
             Token::DECLARATION(declaration) => {
                 function_instructions.append(&mut self.assemble_declaration(&function.variable_history, declaration));
             }
+            Token::RETURN(return_statement) => {
+                function_instructions.append(&mut self.assemble_return(&function.variable_history, return_statement));
+            }
             _ => {}
         }}
 
@@ -108,37 +108,25 @@ impl Assembler {
         return function_instructions
     }
 
-    fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> { match declaration.clone().value.unwrap() {
-        Assignment::INTEGER(integer_assignment) => {
-            let assignment_instructions = integer_assignment.to_assembly(stack_memory);
-            let appended_instructions: Vec<String> = vec![
-                vec![
-                    format!("  sub rsp, {}", stack_memory.step),
-                    format!("  push rax"),
-                ],
-                assignment_instructions,
-                vec![
-                    format!("  mov QWORD [rbp-{}], rax", (declaration.location+1) * stack_memory.step),
-                    format!("  pop rax"),
-                ],
-            ].concat().iter().map(|x| x.to_string()).collect();
-            return appended_instructions
-        }
+    fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> {
+        let assignment_instructions = declaration.value.clone().unwrap().to_assembly(stack_memory);
+        let appended_instructions: Vec<String> = vec![
+            vec![
+                format!("  sub rsp, {}", stack_memory.step),
+                format!("  push rax"),
+            ],
+            assignment_instructions,
+            vec![
+                format!("  mov QWORD [rbp-{}], rax", (declaration.location+1) * stack_memory.step),
+                format!("  pop rax"),
+            ],
+        ].concat().iter().map(|x| x.to_string()).collect();
+        return appended_instructions
+    }
 
-        Assignment::FLOAT(float_assignment) => {
-            let assignment_instructions = float_assignment.to_assembly(stack_memory);
-            let appended_instructions: Vec<String> = vec![
-                vec![
-                    format!("  sub rsp, {}", stack_memory.step),
-                    format!("  push rax"),
-                ],
-                assignment_instructions,
-                vec![
-                    format!("  mov QWORD [rbp-{}], rax", (declaration.location+1) * stack_memory.step),
-                    format!("  pop rax"),
-                ],
-            ].concat().iter().map(|x| x.to_string()).collect();
-            return appended_instructions
-        }
-    }}
+    fn assemble_return(&self, variable_history: &VariableHistory, return_statement: &Return) -> Vec<String> {
+        let assignment_instructions = return_statement.assignment.to_assembly(variable_history);
+
+        return assignment_instructions
+    }
 }
