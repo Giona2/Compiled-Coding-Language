@@ -61,6 +61,7 @@ pub struct SyntaxElements {
             "float"     => "flt",
             "character" => "chr",
             "function"  => "subroutine",
+            "return"    => "expose",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![

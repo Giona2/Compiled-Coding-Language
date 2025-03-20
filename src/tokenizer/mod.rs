@@ -9,7 +9,7 @@ pub mod structures;
 
 #[allow(dead_code)]
 pub mod function;
-    use function::Function;
+    use function::{Function, Return};
 
 #[allow(dead_code)]
 pub mod terminating_loop;
@@ -28,12 +28,13 @@ pub mod enumerators;
 pub mod error;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub enum Token {
     FUNCTION(Function),
     TERMINATINGLOOP(TerminatingLoop),
     DECLARATION(Declaration),
+    RETURN(Return),
 }
 
 
@@ -50,13 +51,12 @@ pub struct Tokenizer {
     }}
 
     pub fn create_token_tree(&mut self, optimized_file_content: &Vec<String>) {
-        let mut stack_memory = VariableHistory::init(MEMORY_STEP);
-        let token_tree = self.generate_token_tree(&mut stack_memory, optimized_file_content);
+        let token_tree = self.generate_token_tree(&mut None, optimized_file_content);
 
         self.token_tree = token_tree;
     }
 
-    pub fn generate_token_tree(&self, stack_memory: &mut VariableHistory, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+    pub fn generate_token_tree(&self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
@@ -65,7 +65,7 @@ pub struct Tokenizer {
 
             // Declarion handling
             if self.syntax_elements.type_names.values_contains(&current_word) { match &content_to_tokenize[i] {
-                val if val == self.syntax_elements.type_names.get("integer").unwrap() => {
+                val if val == self.syntax_elements.type_names.get("integer").unwrap() => { if let Some(parent) = parent_ref {
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
                     let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -76,16 +76,16 @@ pub struct Tokenizer {
                     let declaration_to_evaluate = content_to_tokenize[i..declaration_stop_index].to_vec();
 
                     // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_integer(stack_memory, declaration_to_evaluate);
+                    let created_token = self.parse_integer(&mut parent.variable_history, declaration_to_evaluate);
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
                     // continue the loop
                     i = declaration_stop_index;
                     continue;
-                }
+                }}
 
-                val if val == self.syntax_elements.type_names.get("float").unwrap() => {
+                val if val == self.syntax_elements.type_names.get("float").unwrap() => { if let Some(parent) = parent_ref {
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
                     let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -96,14 +96,14 @@ pub struct Tokenizer {
                     let declaration_to_evaluate = content_to_tokenize[i..declaration_stop_index].to_vec();
 
                     // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_float(stack_memory, declaration_to_evaluate);
+                    let created_token = self.parse_float(&mut parent.variable_history, declaration_to_evaluate);
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
                     // continue the loop
                     i = declaration_stop_index;
                     continue;
-                }
+                }}
 
                 val if val == self.syntax_elements.type_names.get("function").unwrap() => {
                     // Get the first instance of the end block character after the
@@ -124,6 +124,26 @@ pub struct Tokenizer {
                     i = declaration_stop_index;
                     continue;
                 }
+
+                val if val == self.syntax_elements.type_names.get("return").unwrap() => { if let Some(parent) = parent_ref.as_mut() {
+                    // Get the first instance of the end block character after the
+                    // declaration (therefore ending it)
+                    let block_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
+                    let declaration_stop_index = content_to_tokenize.find_after_index(i, &block_stop_char).unwrap();
+
+                    // Get the slice from this index (the declaration start) to the
+                    // block char (the declaration end)
+                    let declaration_to_evaluate = content_to_tokenize[i..=declaration_stop_index-1].to_vec();
+
+                    // Parse the slice into a token and add it to the result
+                    let created_token = self.parse_return(parent, declaration_to_evaluate);
+                    result.push(created_token);
+
+                    // Move the current word to one word after the end of this declaration and
+                    // continue the loop
+                    i = declaration_stop_index;
+                    continue;
+                }}
 
                 _ => {}
             }}
@@ -237,18 +257,39 @@ pub struct Tokenizer {
         let name = declaration[1].to_string();
         let return_type_text = declaration[return_this_index+1].to_owned();
         let return_type = DataType::check_token_type(&return_type_text).unwrap();
-        let inline_block = self.generate_token_tree(&mut variable_history, &inline_block_slice);
 
         // Construct the function
-        let function = Function {
+        let mut function = Function {
             name,
             return_type,
             variable_history,
             arguments,
-            functionaliy: inline_block,
+            functionaliy: Vec::new(),
         };
+
+        // Define the function's functionality
+        let inline_block = self.generate_token_tree(&mut Some(&mut function), &inline_block_slice);
+        function.functionaliy = inline_block;
 
         // Return it
         return Token::FUNCTION(function)
+    }
+
+    fn parse_return(&self, parent: &Function, return_statement: Vec<String>) -> Token {
+        println!("coding_language::tokenizer::Tokenizer::parse_return()");
+        println!("  recieved: {:?}", return_statement);
+
+        let assignment = return_statement[1..].to_vec();
+
+        let assignment: Assignment = match parent.return_type {
+            DataType::INTEGER => { Assignment::INTEGER(IntegerAssignment::from_string_vec(&parent.variable_history, assignment).unwrap()) }
+            DataType::FLOAT   => { Assignment::FLOAT(FloatAssignment::from_string_vec(&parent.variable_history, assignment).unwrap()) }
+        };
+        
+        let return_token = Return {
+            assignment,
+        };
+
+        return Token::RETURN(return_token)
     }
 }

@@ -21,7 +21,7 @@ pub struct Variable {
 
 /// Structure representing the stack memory of the program (with some constraints)
 ///   - All variables are of equal size
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableHistory {
     pub data: Vec<Option<Variable>>,
     pub step: usize,
