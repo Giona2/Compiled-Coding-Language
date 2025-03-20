@@ -2,10 +2,20 @@ use super::enumerators::DataType;
 use super::error::TokenizerError;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Variable {
-    name: String,
-    data_type: DataType,
+    pub name: String,
+    pub data_type: DataType,
+} impl Variable {
+    pub fn new(name: &str, data_type: DataType) -> Self { Self {
+        name: name.to_string(),
+        data_type,
+    }}
+
+    pub fn from_function_arg(from: Vec<String>) -> Self { Self {
+        name: from[1].clone(),
+        data_type: DataType::check_token_type(&from[0]).unwrap(),
+    }}
 }
 
 
@@ -31,7 +41,7 @@ pub struct VariableHistory {
         step,
     }}
 
-    pub fn add_variable(&mut self, variable_name: &str, variable_data_type: DataType) -> Result<(), TokenizerError> {
+    pub fn add_variable(&mut self, variable: Variable) -> Result<(), TokenizerError> {
         // Initiate this variable to manage error handling
         let mut new_variable_location: Option<usize> = None;
 
@@ -42,10 +52,8 @@ pub struct VariableHistory {
 
         // Replace that None value with the new variable...
         if let Some(unwrapped_new_variable_location) = new_variable_location {
-            self.data[unwrapped_new_variable_location] = Some(Variable {
-                name: variable_name.to_string(),
-                data_type: variable_data_type,
-            });
+            self.data[unwrapped_new_variable_location] = Some(variable);
+
             if unwrapped_new_variable_location == self.data.len() - 1 {
                 self.data.push(None);
             }

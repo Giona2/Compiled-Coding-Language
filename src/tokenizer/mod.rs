@@ -5,11 +5,11 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 #[allow(dead_code)]
 pub mod structures;
-    use structures::VariableHistory;
+    use structures::{Variable, VariableHistory};
 
 #[allow(dead_code)]
 pub mod function;
-    use function::{Function, Argument};
+    use function::Function;
 
 #[allow(dead_code)]
 pub mod terminating_loop;
@@ -147,7 +147,11 @@ pub struct Tokenizer {
         let assignment = IntegerAssignment::from_string_vec(stack_memory, string_assignment).unwrap();
 
         // Add it to representation stack_memory
-        stack_memory.add_variable(&name, data_type.clone())
+        let variable_representation = Variable {
+            name: name.clone(),
+            data_type: data_type.clone(),
+        };
+        stack_memory.add_variable(variable_representation)
             .expect("stack_memory does not conclude with None");
 
         // Build the declaration token
@@ -172,14 +176,18 @@ pub struct Tokenizer {
         let name = declaration[1].clone();
         let data_type = DataType::check_token_type(&declaration[0]).unwrap();
         let assignment = FloatAssignment::from_string_vec(stack_memory, string_assignment).unwrap();
- 
+
         // Add it to representation stack_memory
-        stack_memory.add_variable(&name, data_type.clone())
+        let variable_representation = Variable {
+            name: name.clone(),
+            data_type: data_type.clone(),
+        };
+        stack_memory.add_variable(variable_representation)
             .expect("stack_memory does not conclude with None");
  
         // Build the declaration token
         let declaration = Declaration {
-            name: name.to_string(),
+            name: name.clone(),
             location: stack_memory.find_variable(&name).unwrap(),
             data_type,
             value: Some(Assignment::FLOAT(assignment)),
@@ -213,26 +221,30 @@ pub struct Tokenizer {
         let argument_slice: Vec<&[String]> = argument_slice_raw.split(|x| x==",").collect();
         println!("  argument_slice: {:?}", argument_slice);
 
+        // Parse the arguments by iterating over each of them
+        let mut arguments: Vec<Variable> = Vec::new();
+        if argument_slice[0].len() > 0 { for argument in argument_slice {
+            arguments.push( Variable::from_function_arg(argument.to_vec()) );
+        }}
+
+        // Create the variable history and add the arguments to it
+        let mut variable_history = VariableHistory::init(MEMORY_STEP);
+        for argument in arguments.iter() {
+            variable_history.add_variable(argument.to_owned()).unwrap();
+        }
+
         // Parse the function with the given infomation
         let name = declaration[1].to_string();
         let return_type_text = declaration[return_this_index+1].to_owned();
         let return_type = DataType::check_token_type(&return_type_text).unwrap();
-        let mut memory = VariableHistory::init(MEMORY_STEP);
-        let inline_block = self.generate_token_tree(&mut memory, &inline_block_slice);
-
-        // Parse the arguments by iterating over each of them
-        let mut arguments: Vec<Argument> = Vec::new();
-        if argument_slice[0].len() > 0 { for argument in argument_slice {
-            arguments.push( Argument::from_string_vec(argument.to_vec()) );
-        }}
-        
+        let inline_block = self.generate_token_tree(&mut variable_history, &inline_block_slice);
 
         // Construct the function
         let function = Function {
             name,
             return_type,
-            memory,
-            args: arguments,
+            variable_history,
+            arguments,
             functionaliy: inline_block,
         };
 

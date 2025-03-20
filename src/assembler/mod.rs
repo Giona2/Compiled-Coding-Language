@@ -62,19 +62,18 @@ impl Assembler {
         ];
 
         // Initialize arguments
-        for (argument_index, argument) in function.args.iter().enumerate() {
+        for (argument_index, argument) in function.arguments.iter().enumerate() {
             function_instructions.append(&mut vec![
-                format!("  push {}", FUNCTION_ARGUMENT_REGISTERS[argument_index]),
                 format!("  sub rsp, 8"),
                 format!("  sub rsp, 8"),
-                format!("  mov QWORD [rbp-{}]"),
+                //format!("  mov QWORD [rbp-{}]"),
             ]);
         }
 
         // Assemble the functionality
         for token in function.functionaliy.iter() { match token {
             Token::DECLARATION(declaration) => {
-                function_instructions.append(&mut self.assemble_declaration(&function.memory, declaration));
+                function_instructions.append(&mut self.assemble_declaration(&function.variable_history, declaration));
             }
             _ => {}
         }}

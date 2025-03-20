@@ -61,9 +61,29 @@ fn main() {
 
 #[cfg(test)]
 mod testing {
+    use std::fs;
+
+    use crate::optimizer::Optimizer;
+    use crate::tokenizer::Tokenizer;
+
+
     #[test]
     fn test() {
         let my_vec = vec!["int", "x", ",", "int", "y"];
         println!("{:?}", my_vec.split(|x| *x == ",").collect::<Vec<&[&str]>>());
+    }
+
+    #[test]
+    fn tokenize() {
+        // Read from file and flatten it
+        let file_content: String = fs::read_to_string("./examples/main.uml")
+            .expect("Failed to read file");
+        let mut optimizer = Optimizer::init();
+        optimizer.generate_optimized_content(&file_content);
+
+        // Tokenize the flattened content
+        let mut tokenizer = Tokenizer::init();
+        tokenizer.create_token_tree(&optimizer.content);
+        println!("Token Tree: {:?}", tokenizer.token_tree);
     }
 }
