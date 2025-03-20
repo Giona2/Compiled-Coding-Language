@@ -63,10 +63,14 @@ impl Assembler {
 
         // Initialize arguments
         for (argument_index, argument) in function.arguments.iter().enumerate() {
+            let variable_location_index = function.variable_history.find_variable(&argument.name).unwrap();
+            let variable_location = (variable_location_index+1) * function.variable_history.step;
+            let active_register = FUNCTION_ARGUMENT_REGISTERS[argument_index];
+
             function_instructions.append(&mut vec![
                 format!("  sub rsp, 8"),
-                format!("  sub rsp, 8"),
-                //format!("  mov QWORD [rbp-{}]"),
+                format!("  mov QWORD [rbp-{}], {}", variable_location, active_register),
+                format!("  push {}", active_register),
             ]);
         }
 
@@ -78,9 +82,22 @@ impl Assembler {
             _ => {}
         }}
 
-        // Function end
+        // Begin the function's end
         function_instructions.append(&mut vec![
-            format!(".end:"),
+                format!(".end:"),
+        ]);
+
+        // Return the active registers to their original values
+        for (argument_index, _) in function.arguments.iter().enumerate() {
+            let active_register = FUNCTION_ARGUMENT_REGISTERS[argument_index];
+
+            function_instructions.append(&mut vec![
+                format!("  pop {}", active_register),
+            ]);
+        }
+
+        // Reset the stack frame and return
+        function_instructions.append(&mut vec![
             format!("  mov rsp, rbp"),
             format!("  pop rbp"),
             format!("  ret"),

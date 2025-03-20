@@ -65,6 +65,7 @@ mod testing {
 
     use crate::optimizer::Optimizer;
     use crate::tokenizer::Tokenizer;
+    use crate::assembler::Assembler;
 
 
     #[test]
@@ -85,5 +86,26 @@ mod testing {
         let mut tokenizer = Tokenizer::init();
         tokenizer.create_token_tree(&optimizer.content);
         println!("Token Tree: {:?}", tokenizer.token_tree);
+    }
+
+    #[test]
+    fn assemble() {
+        // Read from file and flatten it
+        let file_content: String = fs::read_to_string("./examples/main.uml")
+            .expect("Failed to read file");
+        let mut optimizer = Optimizer::init();
+        optimizer.generate_optimized_content(&file_content);
+
+        // Tokenize the flattened content
+        let mut tokenizer = Tokenizer::init();
+        tokenizer.create_token_tree(&optimizer.content);
+
+        // Essemble the generated token tree
+        let mut assembler = Assembler::init();
+        assembler.generate_instructions(&tokenizer.token_tree).unwrap();
+
+        for instruction in assembler.instructions {
+            println!("{instruction}");
+        }
     }
 }
