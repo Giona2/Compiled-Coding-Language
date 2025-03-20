@@ -4,17 +4,25 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 
 #[allow(dead_code)]
-pub mod representations;
-    use representations::StackMemory;
+pub mod structures;
+    use structures::VariableHistory;
 
 #[allow(dead_code)]
-pub mod constructors;
-    use constructors::*;
+pub mod function;
+    use function::{Function, Argument};
+
+#[allow(dead_code)]
+pub mod terminating_loop;
+    use terminating_loop::TerminatingLoop;
+
+#[allow(dead_code)]
+pub mod declaration;
+    use declaration::Declaration;
 
 #[allow(dead_code)]
 #[allow(unused_macros)]
-pub mod types;
-    use types::*;
+pub mod enumerators;
+    use enumerators::*;
 
 #[allow(dead_code)]
 pub mod error;
@@ -42,13 +50,13 @@ pub struct Tokenizer {
     }}
 
     pub fn create_token_tree(&mut self, optimized_file_content: &Vec<String>) {
-        let mut stack_memory = StackMemory::init(MEMORY_STEP);
+        let mut stack_memory = VariableHistory::init(MEMORY_STEP);
         let token_tree = self.generate_token_tree(&mut stack_memory, optimized_file_content);
 
         self.token_tree = token_tree;
     }
 
-    pub fn generate_token_tree(&self, stack_memory: &mut StackMemory, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+    pub fn generate_token_tree(&self, stack_memory: &mut VariableHistory, content_to_tokenize: &Vec<String>) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
@@ -126,7 +134,7 @@ pub struct Tokenizer {
         return result
     }
 
-    fn parse_integer(&self, stack_memory: &mut StackMemory, declaration: Vec<String>) -> Token {
+    fn parse_integer(&self, stack_memory: &mut VariableHistory, declaration: Vec<String>) -> Token {
         // Parse the declaration
         let equal_sign_index = declaration.find("=").unwrap();
 
@@ -153,7 +161,7 @@ pub struct Tokenizer {
         return Token::DECLARATION(declaration)
     }
 
-    fn parse_float(&self, stack_memory: &mut StackMemory, declaration: Vec<String>) -> Token {
+    fn parse_float(&self, stack_memory: &mut VariableHistory, declaration: Vec<String>) -> Token {
         // Parse the declaration
         let equal_sign_index = declaration.find("=").unwrap();
  
@@ -209,7 +217,7 @@ pub struct Tokenizer {
         let name = declaration[1].to_string();
         let return_type_text = declaration[return_this_index+1].to_owned();
         let return_type = DataType::check_token_type(&return_type_text).unwrap();
-        let mut memory = StackMemory::init(MEMORY_STEP);
+        let mut memory = VariableHistory::init(MEMORY_STEP);
         let inline_block = self.generate_token_tree(&mut memory, &inline_block_slice);
 
         // Parse the arguments by iterating over each of them

@@ -1,7 +1,6 @@
-use super::representations::StackMemory;
+use super::enumerators::DataType;
+use super::structures::VariableHistory;
 use super::Token;
-use super::types::Assignment;
-use super::types::DataType;
 
 
 #[derive(Debug)]
@@ -9,9 +8,10 @@ pub struct Function {
     pub name: String,
     pub return_type: DataType,
     pub args: Vec<Argument>,
-    pub memory: StackMemory,
+    pub memory: VariableHistory,
     pub functionaliy: Vec<Token>,
 }
+
 #[derive(Debug, Clone)]
 pub struct Argument {
     pub name: String,
@@ -21,16 +21,4 @@ pub struct Argument {
         name: from[1].clone(),
         data_type: DataType::check_token_type(&from[0]).unwrap(),
     }}
-}
-
-
-#[derive(Debug)]
-pub struct TerminatingLoop {}
-
-#[derive(Debug, Clone)]
-pub struct Declaration {
-    pub name: String,
-    pub location: usize,
-    pub data_type: DataType,
-    pub value: Option<Assignment>,
 }

@@ -1,5 +1,5 @@
-use crate::tokenizer::types::{FloatAssignment, IntegerAssignment};
-use crate::tokenizer::representations::StackMemory;
+use crate::tokenizer::enumerators::{FloatAssignment, IntegerAssignment};
+use crate::tokenizer::structures::VariableHistory;
 use crate::type_traits::float::F64Extra;
 
 use super::error::AssemblerError;
@@ -36,7 +36,7 @@ pub trait AssignmentToAssembly {
     /// ## Equations with variables
     /// ```rust
     /// let stack_step = 8;
-    /// let mut stack = StackMemory.init(stack_step);
+    /// let mut stack = VariableHistory.init(stack_step);
     /// stack.add_variable("x", /* Data Type*/);
     /// stack.add_variable("y", /* Data Type*/);
     ///
@@ -73,14 +73,14 @@ pub trait AssignmentToAssembly {
     /// // ---
     /// println!("{assembly_equivalent:?}");
     /// ```
-    fn to_assembly(&self, stack_memory: &StackMemory) -> Vec<String>;
+    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String>;
 
     /// Converts either CONST() or VAR() to its assembly value
-    fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError>;
+    fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError>;
 }
 
 impl AssignmentToAssembly for IntegerAssignment {
-    fn to_assembly(&self, stack_memory: &StackMemory) -> Vec<String> { match self {
+    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
         Self::ADD(term_1, term_2)    => {
             let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
             let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
@@ -116,7 +116,7 @@ impl AssignmentToAssembly for IntegerAssignment {
         ].iter().map(|x| x.to_string()).collect()}
     }}
 
-    fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError> { match self {
+    fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError> { match self {
         IntegerAssignment::CONST(constant)        => { Ok(constant.to_string()) }
         IntegerAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
                                          _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
@@ -124,7 +124,7 @@ impl AssignmentToAssembly for IntegerAssignment {
 }
 
 impl AssignmentToAssembly for FloatAssignment {
-    fn to_assembly(&self, stack_memory: &StackMemory) -> Vec<String> { match self {
+    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
         Self::ADD(term_1, term_2)    => {
             let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
             let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
@@ -185,7 +185,7 @@ impl AssignmentToAssembly for FloatAssignment {
         ].iter().map(|x| x.to_string()).collect()}
     }}
 
-    fn term_to_assembly_value(&self, stack_memory: &StackMemory) -> Result<String, AssemblerError> { match self {
+    fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError> { match self {
         FloatAssignment::CONST(constant)        => { Ok(constant.to_assembly_value()) }
         FloatAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
                                               _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }

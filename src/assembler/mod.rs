@@ -1,6 +1,11 @@
 use std::vec;
 
-use crate::tokenizer::{constructors::{Declaration, Function}, representations::StackMemory, types::Assignment, Token};
+use crate::tokenizer::{
+    declaration::Declaration,
+    function::Function,
+    structures::VariableHistory,
+    enumerators::Assignment, Token
+};
 
 
 #[allow(dead_code)]
@@ -48,12 +53,25 @@ impl Assembler {
     }
 
     fn assemble_function(&self, function: &Function) -> Vec<String> {
+        // Function start
         let mut function_instructions: Vec<String> = vec![
             format!("{}:", function.name),
             format!("  push rbp"),
             format!("  mov rbp, rsp"),
+            format!(""),
         ];
 
+        // Initialize arguments
+        for (argument_index, argument) in function.args.iter().enumerate() {
+            function_instructions.append(&mut vec![
+                format!("  push {}", FUNCTION_ARGUMENT_REGISTERS[argument_index]),
+                format!("  sub rsp, 8"),
+                format!("  sub rsp, 8"),
+                format!("  mov QWORD [rbp-{}]"),
+            ]);
+        }
+
+        // Assemble the functionality
         for token in function.functionaliy.iter() { match token {
             Token::DECLARATION(declaration) => {
                 function_instructions.append(&mut self.assemble_declaration(&function.memory, declaration));
@@ -61,6 +79,7 @@ impl Assembler {
             _ => {}
         }}
 
+        // Function end
         function_instructions.append(&mut vec![
             format!(".end:"),
             format!("  mov rsp, rbp"),
@@ -69,10 +88,11 @@ impl Assembler {
             format!(""),
         ]);
 
+        // Return the result
         return function_instructions
     }
 
-    fn assemble_declaration(&self, stack_memory: &StackMemory, declaration: &Declaration) -> Vec<String> { match declaration.clone().value.unwrap() {
+    fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> { match declaration.clone().value.unwrap() {
         Assignment::INTEGER(integer_assignment) => {
             let assignment_instructions = integer_assignment.to_assembly(stack_memory);
             let appended_instructions: Vec<String> = vec![

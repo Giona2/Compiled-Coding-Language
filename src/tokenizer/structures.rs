@@ -1,9 +1,9 @@
-use super::types::DataType;
+use super::enumerators::DataType;
 use super::error::TokenizerError;
 
 
 #[derive(Debug)]
-pub struct StackVariable {
+pub struct Variable {
     name: String,
     data_type: DataType,
 }
@@ -12,11 +12,11 @@ pub struct StackVariable {
 /// Structure representing the stack memory of the program (with some constraints)
 ///   - All variables are of equal size
 #[derive(Debug)]
-pub struct StackMemory {
-    pub data: Vec<Option<StackVariable>>,
+pub struct VariableHistory {
+    pub data: Vec<Option<Variable>>,
     pub step: usize,
 
-} impl StackMemory {
+} impl VariableHistory {
     /// Initiates stack memory representation (`Memory`) for the program
     /// `step` indicates how many bytes each variable can occupy
     ///
@@ -42,7 +42,7 @@ pub struct StackMemory {
 
         // Replace that None value with the new variable...
         if let Some(unwrapped_new_variable_location) = new_variable_location {
-            self.data[unwrapped_new_variable_location] = Some(StackVariable {
+            self.data[unwrapped_new_variable_location] = Some(Variable {
                 name: variable_name.to_string(),
                 data_type: variable_data_type,
             });

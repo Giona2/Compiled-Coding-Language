@@ -1,6 +1,6 @@
 use super::error::TokenizerError;
 use crate::data::SyntaxElements;
-use super::representations::StackMemory;
+use super::structures::VariableHistory;
 
 
 #[derive(Debug, Clone)]
@@ -119,7 +119,7 @@ pub enum IntegerAssignment {
     /// // output: ADD((TERM(3), DIV(TERM(4), TERM(6))))
     /// println!("{declaration:?}");
     /// ```
-    pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
+    pub fn from_string_vec(stack_memory: &VariableHistory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
         println!("IntegerAssignment::from_string_vec()");
         println!("  |- recieved: {string_equation:?}");
 
@@ -192,7 +192,7 @@ pub enum FloatAssignment {
     /// // output: ADD((TERM(3), DIV(TERM(4), TERM(6))))
     /// println!("{declaration:?}");
     /// ```
-    pub fn from_string_vec(stack_memory: &StackMemory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
+    pub fn from_string_vec(stack_memory: &VariableHistory, string_equation: Vec<String>) -> Result<Self, TokenizerError> {
         println!("IntegerAssignment::from_string_vec()");
         println!("  |- recieved: {string_equation:?}");
 
