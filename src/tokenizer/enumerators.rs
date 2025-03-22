@@ -2,7 +2,7 @@ use super::error::TokenizerError;
 use super::Tokenizer;
 use crate::data::SyntaxElements;
 use super::structures::VariableHistory;
-use crate::type_traits::hashmap::StringStringHashMapExtra;
+use crate::type_traits::hashmap::{HashMapExtra, StringStringHashMapExtra};
 use crate::type_traits::vector::VecExtra;
 
 
@@ -125,7 +125,7 @@ pub enum Assignment {
             .collect();
 
         // If the equation given is just one element
-        if string_equation.len() == 1 || !syntax_elements.math_symbols.contains_value(&string_equation[1]) {
+        if string_equation.len() == 1 || string_equation.find_from_vec(&math_symbols).is_none() {
             return Self::from_equation_term(tokenizer, variable_history, string_equation).unwrap()
         }
 

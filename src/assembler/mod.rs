@@ -110,7 +110,7 @@ impl Assembler {
     }
 
     fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> {
-        let assignment_instructions = declaration.value.clone().unwrap().to_assembly(stack_memory);
+        let assignment_instructions = declaration.value.clone().unwrap().to_assembly_instructions(stack_memory);
         let appended_instructions: Vec<String> = vec![
             vec![
                 format!("  sub rsp, {}", stack_memory.step),
@@ -126,7 +126,11 @@ impl Assembler {
     }
 
     fn assemble_return(&self, variable_history: &VariableHistory, return_statement: &Return) -> Vec<String> {
-        let assignment_instructions = return_statement.assignment.to_assembly(variable_history);
+        let mut assignment_instructions = return_statement.assignment.to_assembly_instructions(variable_history);
+
+        assignment_instructions.append(&mut vec![
+            format!("  mov rax, rdi")
+        ]);
 
         return assignment_instructions
     }

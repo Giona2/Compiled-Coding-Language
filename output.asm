@@ -20,6 +20,8 @@ add:
   mov rax, rdi
   mov rdi, QWORD [rbp-16]
   add rax, rdi
+  mov rdi, rax
+  mov rax, rdi
 .end:
   pop rdi
   pop rsi
@@ -36,9 +38,15 @@ main:
   mov rdi, 1
   mov rsi, 3
   call add
+  mov rdi, rax
   mov QWORD [rbp-8], rax
   pop rax
-0
+  mov rdi, QWORD [rbp-8]
+  mov rax, rdi
+  mov rdi, 5
+  add rax, rdi
+  mov rdi, rax
+  mov rax, rdi
 .end:
   mov rsp, rbp
   pop rbp

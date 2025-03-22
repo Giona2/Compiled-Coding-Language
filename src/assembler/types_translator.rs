@@ -5,6 +5,7 @@ use crate::type_traits::float::F64Extra;
 use crate::type_traits::vector::VecExtra;
 
 use super::data::FUNCTION_ARGUMENT_REGISTERS;
+use super::error::AssemblerError;
 
 
 pub trait AssignmentToAssembly {
@@ -15,16 +16,21 @@ pub trait AssignmentToAssembly {
     ///
     /// Note that the rax register is reserved for performing arithmetic with the result of this
     /// function
-    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String>;
+    fn to_assembly_instructions(&self, variable_history: &VariableHistory) -> Vec<String>;
+
+    /// Converts either `Self::INTEGER` or `Self::FLOAT` to its acocciated assembly value
+    ///
+    /// Returns Err() if this is not a valid branch
+    fn to_assembly_value(&self) -> Result<String, AssemblerError>;
 }
 
 impl AssignmentToAssembly for Assignment {
-    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
+    fn to_assembly_instructions(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
         Self::EVAL(first_term_raw, operation, second_term_raw) => {
             let mut returned_instructions: Vec<String> = Vec::new();
 
-            let first_term  = first_term_raw.to_assembly(variable_history);
-            let second_term = second_term_raw.to_assembly(variable_history);
+            let first_term  = first_term_raw.to_assembly_instructions(variable_history);
+            let second_term = second_term_raw.to_assembly_instructions(variable_history);
 
             returned_instructions.append_immut(&first_term);
             returned_instructions.append(&mut vec![
@@ -42,8 +48,12 @@ impl AssignmentToAssembly for Assignment {
                 Operator::MUL => { returned_instructions.append(&mut vec![
                     format!("  imul rax, rdi")
                 ]);}
-                _ => {panic!("Not yet implemented")}
+                _ => { panic!("Not yet implemented") }
             }
+
+            returned_instructions.append(&mut vec![
+                format!("  mov rdi, rax")
+            ]);
 
             return returned_instructions
         }
@@ -52,7 +62,7 @@ impl AssignmentToAssembly for Assignment {
             let mut returned_instructions: Vec<String> = Vec::new();
 
             returned_instructions.append(&mut vec![
-                format!("{}", returned_number.to_assembly_value()),
+                format!("  mov rdi, {}", returned_number.to_assembly_value()),
             ]);
 
             return returned_instructions
@@ -62,7 +72,7 @@ impl AssignmentToAssembly for Assignment {
             let mut returned_instructions: Vec<String> = Vec::new();
 
             returned_instructions.append(&mut vec![
-                format!("mov rax, {}", returned_number.to_assembly_value()),
+                format!("  mov rdi, {}", returned_number.to_assembly_value()),
             ]);
 
             return returned_instructions
@@ -73,12 +83,13 @@ impl AssignmentToAssembly for Assignment {
 
             // Write the function arguments
             for (argument_index, argument) in function_args.iter().enumerate() { returned_instructions.append(&mut vec![
-                format!("  mov {}, {}", FUNCTION_ARGUMENT_REGISTERS[argument_index], argument.to_assembly(variable_history)[0]),
+                format!("  mov {}, {}", FUNCTION_ARGUMENT_REGISTERS[argument_index], argument.to_assembly_value().unwrap()),
             ])};
 
             // Call the function
             returned_instructions.append(&mut vec![
                 format!("  call {}", function_name),
+                format!("  mov rdi, rax")
             ]);
 
             return returned_instructions;
@@ -93,6 +104,12 @@ impl AssignmentToAssembly for Assignment {
 
             return returned_instructions
         }
+    }}
+
+    fn to_assembly_value(&self) -> Result<String, AssemblerError> { match self {
+        Assignment::INTEGER(returned_num) => { return Ok(returned_num.to_assembly_value()) }
+        Assignment::FLOAT(returned_num)   => { return Ok(returned_num.to_assembly_value()) }
+                                        _ => { return Err(AssemblerError::IncorrectAssignmentAttemptedToConvert) }
     }}
 }
 

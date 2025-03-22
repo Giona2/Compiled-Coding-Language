@@ -8,4 +8,7 @@ pub enum AssemblerError {
     #[error("The value attempting to the retrieved through Assignment.term_to_assembly_value().
              Ensure this Assignment is either a CONST() or a TERM()")]
     ValueRetrievedIsNotATerm,
+    #[error("The assignment you are trying to convert to an assembly instruction is not a valid branch.
+             Ensure you are using either an Assignment::INTEGER or Assignment::FLOAT branch")]
+    IncorrectAssignmentAttemptedToConvert,
 }

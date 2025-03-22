@@ -35,9 +35,8 @@ pub trait StringStringHashMapExtra {
     /// Gets every value held in this HashMap as a Vec<String> of a given size/len
     fn values_of_size(&self, size: usize) -> Vec<String>;
 
+    /// Gets the length of the longest string in this `HashMap` values
     fn len_of_largest(&self) -> usize;
-
-    fn contains_value(&self, target: &str) -> bool;
 
 } impl StringStringHashMapExtra for HashMap<String, String> {
     fn values_of_size(&self, size: usize) -> Vec<String> {
@@ -63,8 +62,15 @@ pub trait StringStringHashMapExtra {
 
         return result
     }
+}
 
-    fn contains_value(&self, target: &str) -> bool {
+
+pub trait HashMapExtra<T: Eq> {
+    /// Checks this hashmap to see if it contains `target` within its values
+    fn contains_value(&self, target: &T) -> bool;
+
+} impl<T: Eq> HashMapExtra<T> for HashMap<String, T> {
+    fn contains_value(&self, target: &T) -> bool {
         let mut result = false;
 
         for value in self.values() {

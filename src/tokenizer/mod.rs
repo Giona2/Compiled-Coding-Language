@@ -178,6 +178,7 @@ pub struct Tokenizer {
         return Token::DECLARATION(declaration)
     }
 
+    /*
     fn parse_float(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
         // Parse the declaration
         let equal_sign_index = declaration.find(&"=".to_owned()).unwrap();
@@ -208,6 +209,7 @@ pub struct Tokenizer {
  
         return Token::DECLARATION(declaration)
     }
+    */
 
     fn parse_function(&mut self, declaration: Vec<String>) -> Token {
         println!("coding_language::tokenizer::Tokenizer::parse_function()");
