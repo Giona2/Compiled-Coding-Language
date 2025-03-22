@@ -15,19 +15,6 @@ impl StrVecExtra for Vec<&str> {
 }
 
 pub trait StringVecExtra {
-    /// Returns the index of the first matched pattern after a given index
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let my_vec: Vec<String> = vec!["3".to_string(), "2".to_string(), "3".to_string(), "4".to_string()]
-    ///
-    /// // index_of_3 = 2
-    /// let index_of_3 = my_vec.find_after_index(1, "3")
-    /// ```
-    fn find_after_index(&self, index: usize, pattern: &str) -> Option<usize>;
-
-
     /// Returns a reordered version of this `Vec<String>` where the longest string is at index `0`
     /// and the smallest string is at the last index
     ///
@@ -76,17 +63,7 @@ pub trait StringVecExtra {
 }
 
 impl StringVecExtra for Vec<String> {
-    fn find_after_index(&self, index: usize, pattern: &str) -> Option<usize> {
-        let mut result: Option<usize> = None;
-
-        for (i, element) in self.iter().enumerate() {
-            if element == pattern && i > index {
-                result = Some(i); break; 
-            }
-        }
-
-        return result
-    }
+    fn find_after_index(&self, index: usize, pattern: &str) -> Option<usize> {}
 
     fn find(&self, pattern: &str) -> Option<usize> {}
 
@@ -154,27 +131,29 @@ pub trait VecExtra<T: Eq> {
     /// Returns the index of the first instance of `pattern` in this vector
     ///
     /// Returns None if `pattern` is not found in this vector
-    fn find(&self, pattern: T) -> Option<usize>;
+    fn find(&self, pattern: &T) -> Option<usize>;
 
     /// Returns the index of the first instance of any elements in `patterns` in this vector
     ///
     /// Returns None if none of the elements in `patterns` are found
-    fn find_from_vec(&self, patterns: Vec<T>) -> Option<usize>;
+    fn find_from_vec(&self, patterns: &[T]) -> Option<usize>;
 
+    /// Returns the index of the first matched pattern after a given index
+    fn find_after_index(&self, index: usize, pattern: &T) -> Option<usize>;
 }
 impl<T: Eq> VecExtra<T> for Vec<T> {
-    fn find(&self, pattern: T) -> Option<usize> {
+    fn find(&self, pattern: &T) -> Option<usize> {
         let mut result: Option<usize> = None;
 
         // Find the first instance of the given pattern
         for (i, element) in self.iter().enumerate() {
-            if *element == pattern { result = Some(i); break; }
+            if element == pattern { result = Some(i); break; }
         }
 
         return result
     }
 
-    fn find_from_vec(&self, patterns: Vec<T>) -> Option<usize> {
+    fn find_from_vec(&self, patterns: &[T]) -> Option<usize> {
         let mut result: Option<usize> = None;
 
         for (element_index, element) in self.iter().enumerate() {
@@ -185,6 +164,18 @@ impl<T: Eq> VecExtra<T> for Vec<T> {
             }
 
             if pattern_found { break }
+        }
+
+        return result
+    }
+
+    fn find_after_index(&self, index: usize, pattern: &T) -> Option<usize> {
+        let mut result: Option<usize> = None;
+
+        for (i, element) in self.iter().enumerate() {
+            if element == pattern && i > index {
+                result = Some(i); break; 
+            }
         }
 
         return result

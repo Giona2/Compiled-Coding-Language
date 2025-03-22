@@ -9,4 +9,8 @@ pub enum TokenizerError {
     #[error("The equation inserted into Assignment::from_string_vec() was incorrectly formatted.
              Ensure you are using proper built-in arithmetic characters in the equation")]
     IncorrectEquationFormatting,
+    #[error("Assignment could not parse this term in a variable declaration")]
+    CouldNotParseTerm,
+    #[error("Operator could not parse this math operator")]
+    CouldNotParseMathOperator,
 }

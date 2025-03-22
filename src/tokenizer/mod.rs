@@ -1,11 +1,11 @@
-use crate::type_traits::vector::StringVecExtra;
+use crate::type_traits::vector::VecExtra;
 use crate::type_traits::hashmap::StringStringHashMapExtra;
 use crate::data::{SyntaxElements, MEMORY_STEP};
 
 
 #[allow(dead_code)]
 pub mod structures;
-    use structures::{FunctionHistory, Variable, VariableHistory};
+    use structures::{Variable, VariableHistory};
 
 #[allow(dead_code)]
 pub mod function;
@@ -17,12 +17,12 @@ pub mod terminating_loop;
 
 #[allow(dead_code)]
 pub mod declaration;
-    use declaration::Declaration;
+    use declaration::{Declaration, DataType};
 
 #[allow(dead_code)]
 #[allow(unused_macros)]
 pub mod enumerators;
-    use enumerators::*;
+    use enumerators::Assignment;
 
 #[allow(dead_code)]
 pub mod error;
@@ -41,14 +41,12 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
-    function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
 } impl Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
-        function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
 
@@ -58,7 +56,7 @@ pub struct Tokenizer {
         self.token_tree = token_tree;
     }
 
-    pub fn generate_token_tree(&mut self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+    pub fn generate_token_tree(&self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
@@ -99,9 +97,6 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_function(declaration_to_evaluate);
-                    if let Token::FUNCTION(function) = created_token.clone() {
-                        self.function_history.push(function);
-                    }
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -146,8 +141,8 @@ pub struct Tokenizer {
         
 
         // Parse the declaration
-        let equal_sign_index = declaration.find(&equals_char).unwrap();
-        let set_type_index   = declaration.find(&set_type_char).unwrap();
+        let equal_sign_index = declaration.find(equals_char).unwrap();
+        let set_type_index   = declaration.find(set_type_char).unwrap();
 
         // Get the assignment part (everything after equals and before `;`)
         let string_assignment = declaration[equal_sign_index+1..declaration.len()].to_vec();
@@ -155,11 +150,7 @@ pub struct Tokenizer {
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
         let data_type = DataType::check_token_type(&declaration[set_type_index+1]).unwrap();
-        let assignment: Assignment = match data_type {
-            DataType::INTEGER => { Assignment::INTEGER(IntegerAssignment::from_string_vec(variable_history, string_assignment).unwrap()) }
-            DataType::FLOAT   => { Assignment::FLOAT(FloatAssignment::from_string_vec(variable_history, string_assignment).unwrap())     }
-        };
-
+        let assignment: Assignment = Assignment::from_string_vec(&self, variable_history, string_assignment);
         // Add it to representation variable_history
         let variable_representation = Variable {
             name: name.clone(),
@@ -173,7 +164,7 @@ pub struct Tokenizer {
             name: name.to_string(),
             location: variable_history.find_variable(&name).unwrap(),
             data_type,
-            value: Some(Assignment::INTEGER(assignment)),
+            value: Some(assignment),
         };
 
         return Token::DECLARATION(declaration)
@@ -181,7 +172,7 @@ pub struct Tokenizer {
 
     fn parse_float(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
         // Parse the declaration
-        let equal_sign_index = declaration.find("=").unwrap();
+        let equal_sign_index = declaration.find(&"=".to_owned()).unwrap();
  
         // Get the assignment part (everything after equals and before `;`)
         let string_assignment = declaration[equal_sign_index+1..declaration.len()].to_vec();
@@ -189,7 +180,7 @@ pub struct Tokenizer {
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
         let data_type = DataType::check_token_type(&declaration[0]).unwrap();
-        let assignment = FloatAssignment::from_string_vec(variable_history, string_assignment).unwrap();
+        let assignment = Assignment::from_string_vec(&self, variable_history, string_assignment);
 
         // Add it to representation variable_history
         let variable_representation = Variable {
@@ -204,7 +195,7 @@ pub struct Tokenizer {
             name: name.clone(),
             location: variable_history.find_variable(&name).unwrap(),
             data_type,
-            value: Some(Assignment::FLOAT(assignment)),
+            value: Some(assignment),
         };
  
         return Token::DECLARATION(declaration)
@@ -224,10 +215,10 @@ pub struct Tokenizer {
             .unwrap();
 
         // Get the indexes of the necessary characters
-        let block_start_index = declaration.find(&block_start_char).unwrap();
-        let return_this_index = declaration.find(&return_this_char).unwrap();
-        let begin_conditions_index = declaration.find(&begin_conditions_char).unwrap();
-        let end_conditions_index = declaration.find(&end_conditions_char).unwrap();
+        let block_start_index = declaration.find(block_start_char).unwrap();
+        let return_this_index = declaration.find(return_this_char).unwrap();
+        let begin_conditions_index = declaration.find(begin_conditions_char).unwrap();
+        let end_conditions_index = declaration.find(end_conditions_char).unwrap();
 
         // Get the function block and given argument slices
         let inline_block_slice = declaration[block_start_index+1..].to_vec();
@@ -273,11 +264,10 @@ pub struct Tokenizer {
         println!("coding_language::tokenizer::Tokenizer::parse_return()");
         println!("  recieved: {:?}", return_statement);
 
-        let assignment = return_statement[1..].to_vec();
+        let assignment_slice = return_statement[1..].to_vec();
 
-        let assignment: Assignment = match parent.return_type {
-            DataType::INTEGER => { Assignment::INTEGER(IntegerAssignment::from_string_vec(&parent.variable_history, assignment).unwrap()) }
-            DataType::FLOAT   => { Assignment::FLOAT(FloatAssignment::from_string_vec(&parent.variable_history, assignment).unwrap()) }
+        let assignment: Assignment = {
+            Assignment::from_string_vec(&self, &parent.variable_history, assignment_slice)
         };
         
         let return_token = Return {

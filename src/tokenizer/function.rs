@@ -1,4 +1,5 @@
-use super::enumerators::{Assignment, DataType};
+use super::enumerators::Assignment;
+use super::declaration::DataType;
 use super::structures::{VariableHistory, Variable};
 use super::Token;
 

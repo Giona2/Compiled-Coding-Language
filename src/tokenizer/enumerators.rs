@@ -1,22 +1,9 @@
 use super::error::TokenizerError;
 use super::Tokenizer;
-use crate::{data::SyntaxElements, type_traits::string::StringExtra};
+use crate::data::SyntaxElements;
 use super::structures::VariableHistory;
 use crate::type_traits::hashmap::StringStringHashMapExtra;
 use crate::type_traits::vector::VecExtra;
-
-
-#[derive(Debug, Clone)]
-pub enum DataType {
-    INTEGER,
-    FLOAT,
-} impl DataType {
-    pub fn check_token_type(word_to_check: &str) -> Option<Self> { let syntax_elements = SyntaxElements::init(); match word_to_check {
-        val if val == syntax_elements.type_names["integer"] => Some(Self::INTEGER),
-        val if val == syntax_elements.type_names["float"]   => Some(Self::FLOAT),
-                                                          _ => None,
-    }}
-}
 
 
 #[derive(Debug, Clone)]
@@ -25,9 +12,36 @@ pub enum Operator {
     SUB,
     MUL,
     DIV,
+} impl Operator {
+    /// Converts a string of the accociated operator with a variant of `Operator`
+    ///
+    /// Returns Err() if an incorrect symbol was given
+    ///
+    /// This is used in conjunction with `SyntaxElements` to correctly match all math operators
+    pub fn from_string(from: &str) -> Result<Self, TokenizerError> {
+        let syntax_elements = SyntaxElements::init();
+        match from {
+            val if val == syntax_elements.math_symbols["addition"] => {
+                return Ok(Self::ADD)
+            }
+            val if val == syntax_elements.math_symbols["subtraction"] => {
+                return Ok(Self::SUB)
+            }
+            val if val == syntax_elements.math_symbols["multiplication"] => {
+                return Ok(Self::MUL)
+            }
+            val if val == syntax_elements.math_symbols["division"] => {
+                return Ok(Self::DIV)
+            }
+            _ => {
+                return Err(TokenizerError::CouldNotParseMathOperator)
+            }
+        }
+    }
 }
 
 
+/*
 /// A shorthand method to build an Assignment enumerator
 ///
 /// ```rust
@@ -87,22 +101,24 @@ macro_rules! feq {
         ))
     };
 }
+*/
 
 
 #[derive(Debug, Clone)]
 pub enum Assignment {
     EVAL(Box<Assignment>, Operator, Box<Assignment>),
-    FUNC(),
-    INTEGER(IntegerAssignment),
-    FLOAT(FloatAssignment),
+    FUNC(String, Vec<Assignment>),
+    VAR(usize),
+    INTEGER(i64),
+    FLOAT(f64),
 } impl Assignment {
-    pub fn from_string_vec(tokenizer: &Tokenizer, variable_history: &VariableHistory, string_equation: Vec<String>, data_type: DataType) -> Result<Self, TokenizerError> {
+    /// Parses a string vector (an equation) into an Assignment
+    pub fn from_string_vec(tokenizer: &Tokenizer, variable_history: &VariableHistory, string_equation: Vec<String>) -> Self {
         println!("IntegerAssignment::from_string_vec()");
         println!("  |- recieved: {string_equation:?}");
 
         let syntax_elements = SyntaxElements::init();
 
-        let begin_args_char = syntax_elements.assignment_symbols.get("begin conditions").unwrap();
         let math_symbols: Vec<String> = syntax_elements.math_symbols.clone()
             .values()
             .map(|x|x.to_string())
@@ -110,34 +126,24 @@ pub enum Assignment {
 
         // If the equation given is just one element
         if string_equation.len() == 1 || !syntax_elements.math_symbols.contains_value(&string_equation[1]) {
-            return Self::from_equation_term(tokenizer, data_type, variable_history, string_equation)
+            return Self::from_equation_term(tokenizer, variable_history, string_equation).unwrap()
         }
 
-        let math_symbol_index = string_equation.find_from_vec(math_symbols).unwrap();
+        // Get the location of the math symbol
+        let math_symbol_index = string_equation.find_from_vec(&math_symbols).unwrap();
+        let math_symbol = string_equation[math_symbol_index].clone();
 
+        // Get the first and second terms
         let first_term_slice  = string_equation[..=math_symbol_index-1].to_owned();
         let second_term_slice = string_equation[math_symbol_index+1..].to_owned();
 
-        let first_term  = Self::from_equation_term(tokenizer, data_type.clone(), variable_history, first_term_slice ).unwrap();
-        let second_term = Self::from_equation_term(tokenizer, data_type.clone(), variable_history, second_term_slice).unwrap();
+        // Parse the first and second terms
+        let first_term  = Self::from_equation_term(tokenizer, variable_history, first_term_slice ).unwrap();
+        let second_term = Self::from_equation_term(tokenizer, variable_history, second_term_slice).unwrap();
 
-        match first_term {
-            Assignment::INTEGER(first_term_assignment) => { match second_term {
-                Assignment::INTEGER(second_term_assignment) => {
-
-                }
-                Assignment::FLOAT(second_term_assignment) => {
-                }
-            }}
-            Assignment::FLOAT(first_term_assignment) => { match second_term {
-                Assignment::INTEGER(second_term_assignment) => {
-                }
-                Assignment::FLOAT(second_term_assignment) => {
-                }
-            }}
-        }
-
-        todo!()
+        // Return the evaluation of the first term and the second term operating with the given
+        // math symbol
+        return Self::EVAL(Box::new(first_term), Operator::from_string(&math_symbol).unwrap(), Box::new(second_term));
 
         /*match string_equation[1].as_str() {
             "+" => Ok(*feq!(first_term, ADD, second_term)),
@@ -148,35 +154,29 @@ pub enum Assignment {
         }*/
     }
 
-    fn from_equation_term(tokenizer: &Tokenizer, data_type: DataType, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
+    fn from_equation_term(tokenizer: &Tokenizer, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
         let syntax_elements = SyntaxElements::init();
 
         let begin_args_char = syntax_elements.assignment_symbols.get("begin conditions").unwrap();
         let end_args_char   = syntax_elements.assignment_symbols.get("end conditions").unwrap();
 
-        // Check if the declaration is a number
-        if term[0].is_number() { match data_type {
-            DataType::INTEGER => { return Ok(Assignment::INTEGER(
-                IntegerAssignment::CONST(term[0].clone().parse().unwrap())
-            ))}
-            DataType::FLOAT => { return Ok(Assignment::FLOAT(
-                FloatAssignment::CONST(term[0].clone().parse().unwrap())
-            ))}
-        }}
+        // Check if the declaration is an integer
+        if let Ok(returned_number) = term[0].clone().parse::<i64>() {
+            return Ok(Assignment::INTEGER(returned_number))
+        }
+        // Check if the declaration is a float
+        else if let Ok(returned_number) = term[0].clone().parse::<f64>() {
+            return Ok(Assignment::FLOAT(returned_number))
+        }
         // Check if the declaration is a variable
-        else if let Some(variable_location_index) = variable_history.find_variable(&term[0]) { match data_type {
-            DataType::INTEGER => { return Ok(Assignment::INTEGER(
-                IntegerAssignment::VAR(variable_location_index)
-            ))}
-            DataType::FLOAT => { return Ok(Assignment::FLOAT(
-                FloatAssignment::VAR(variable_location_index)
-            ))}
-        }}
-        // Assume it's a function
-        else if let Some(function) = tokenizer.function_history.find_by_name(&term[0]) {
+        else if let Some(variable_location_index) = variable_history.find_variable(&term[0]) {
+            return Ok(Assignment::VAR(variable_location_index))
+        }
+        // Check if the declaration is a function
+        else if let Some(_) = tokenizer.function_history.find_by_name(&term[0]) {
             // Find the begin and end args characters
-            let begin_args_index = term.find(begin_args_char.to_string()).unwrap();
-            let end_args_index   = term.find(end_args_char.to_string()).unwrap();
+            let begin_args_index = term.find(begin_args_char).unwrap();
+            let end_args_index   = term.find(end_args_char).unwrap();
 
             // Get the argument slice
             let passed_args_slice: Vec<String> = term[begin_args_index+1..=end_args_index-1].to_vec();
@@ -184,29 +184,20 @@ pub enum Assignment {
             // Get the name of the function and make a list of all the arguments
             let name = term[0].clone();
             let mut passed_args: Vec<Assignment> = Vec::new();
-            if passed_args_slice.len() > 0 { for (passed_argument_index, passed_argument_string) in passed_args_slice.split(|x| x==",").into_iter().enumerate() {
-                let acossiated_argument = function.arguments[passed_argument_index].clone();
-                passed_args.push(Self::from_equation_term(tokenizer, acossiated_argument.data_type, variable_history, passed_argument_string.to_vec()).unwrap())
+            if passed_args_slice.len() > 0 { for passed_argument_string in passed_args_slice.split(|x| x==",").into_iter() {
+                passed_args.push(Self::from_equation_term(tokenizer, variable_history, passed_argument_string.to_vec()).unwrap())
             }};
-            
-            // Construct the declaration and return it 
-            match data_type {
-                DataType::INTEGER => { return Ok(Assignment::INTEGER(
-                    IntegerAssignment::FUNCTION(name, passed_args)
-                ))}
-                DataType::FLOAT => { return Ok(Assignment::FLOAT(
-                    FloatAssignment::FUNCTION(name, passed_args)
-                ))}
-            }
+
+            return Ok(Assignment::FUNC(name, passed_args));
         }
         else {
-            Err(TokenizerError)
+            Err(TokenizerError::CouldNotParseTerm)
         }
     }
 }
 
 
-
+/*
 /// A representation of the series of steps the program needs to run to equate a `Declaration`
 ///
 /// Each branch represents an arithmatic expression that can be calculated by the CPU registers
@@ -365,4 +356,4 @@ pub enum FloatAssignment {
             return false
         }
     }
-}
+}*/

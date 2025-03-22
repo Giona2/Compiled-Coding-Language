@@ -1,4 +1,18 @@
-use super::enumerators::{DataType, Assignment};
+use super::enumerators::Assignment;
+use crate::data::SyntaxElements;
+
+
+#[derive(Debug, Clone)]
+pub enum DataType {
+    INTEGER,
+    FLOAT,
+} impl DataType {
+    pub fn check_token_type(word_to_check: &str) -> Option<Self> { let syntax_elements = SyntaxElements::init(); match word_to_check {
+        val if val == syntax_elements.type_names["integer"] => Some(Self::INTEGER),
+        val if val == syntax_elements.type_names["float"]   => Some(Self::FLOAT),
+                                                          _ => None,
+    }}
+}
 
 
 #[derive(Debug, Clone)]
