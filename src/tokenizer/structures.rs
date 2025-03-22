@@ -1,5 +1,38 @@
 use super::declaration::DataType;
 use super::error::TokenizerError;
+use super::function::Function;
+
+
+#[derive(Debug, Clone)]
+pub struct FunctionHistory {
+    data: Vec<Function>,
+} impl FunctionHistory {
+    /// Initialize FunctionHistory
+    pub fn init() -> Self { Self {
+        data: Vec::new(),
+    }}
+
+    /// Gets a function in FunctionHistory by it's name
+    ///
+    /// If the function is not found, this will return None
+    pub fn find_by_name(&self, function_name: &str) -> Option<Function> {
+        let mut result: Option<Function> = None;
+
+        for function in self.data.clone() {
+            if function.name == function_name {
+                result = Some(function);
+                break;
+            }
+        }
+
+        return result
+    }
+
+    /// Add a `Function` to this `FunctionHistory`
+    pub fn add_function(&mut self, function: Function) {
+        self.data.push(function);
+    }
+}
 
 
 #[derive(Debug, Clone)]

@@ -114,7 +114,7 @@ pub enum Assignment {
 } impl Assignment {
     /// Parses a string vector (an equation) into an Assignment
     pub fn from_string_vec(tokenizer: &Tokenizer, variable_history: &VariableHistory, string_equation: Vec<String>) -> Self {
-        println!("IntegerAssignment::from_string_vec()");
+        println!("Assignment::from_string_vec()");
         println!("  |- recieved: {string_equation:?}");
 
         let syntax_elements = SyntaxElements::init();
@@ -155,6 +155,10 @@ pub enum Assignment {
     }
 
     fn from_equation_term(tokenizer: &Tokenizer, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
+        println!("coding_language::tokenizer::enumerators::Assignment::from_equation_term()");
+        println!("  recieved: {term:?}");
+        println!("  tokenizer functions = {:?}", tokenizer.function_history);
+
         let syntax_elements = SyntaxElements::init();
 
         let begin_args_char = syntax_elements.assignment_symbols.get("begin conditions").unwrap();

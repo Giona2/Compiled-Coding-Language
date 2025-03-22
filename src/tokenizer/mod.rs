@@ -5,7 +5,7 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 #[allow(dead_code)]
 pub mod structures;
-    use structures::{Variable, VariableHistory};
+    use structures::{FunctionHistory, Variable, VariableHistory};
 
 #[allow(dead_code)]
 pub mod function;
@@ -41,12 +41,14 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
+    function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
 } impl Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
+        function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
 
@@ -56,16 +58,18 @@ pub struct Tokenizer {
         self.token_tree = token_tree;
     }
 
-    pub fn generate_token_tree(&self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+    pub fn generate_token_tree(&mut self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+        println!("coding_language::tokenizer::Tokenizer::generate_token_tree()");
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
         while i < content_to_tokenize.len() {
             let current_word = content_to_tokenize[i].clone();
+            println!("  current_word: {current_word:?}");
 
             // Declarion handling
-            if self.syntax_elements.type_names.contains_value(&current_word) { match &content_to_tokenize[i] {
-                val if val == self.syntax_elements.type_names.get("variable").unwrap() => { if let Some(parent) = parent_ref {
+            match &content_to_tokenize[i] {
+                val if val == self.syntax_elements.declaration_names.get("variable").unwrap() => { if let Some(parent) = parent_ref {
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
                     let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -85,7 +89,8 @@ pub struct Tokenizer {
                     continue;
                 }}
 
-                val if val == self.syntax_elements.type_names.get("function").unwrap() => {
+                val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
+                    println!("  found function");
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
                     let block_stop_char = self.syntax_elements.assignment_symbols.get("end body").unwrap();
@@ -97,6 +102,9 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_function(declaration_to_evaluate);
+                    if let Token::FUNCTION(function) = created_token.clone() {
+                        self.function_history.add_function(function);
+                    }
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -105,7 +113,7 @@ pub struct Tokenizer {
                     continue;
                 }
 
-                val if val == self.syntax_elements.type_names.get("return").unwrap() => { if let Some(parent) = parent_ref.as_mut() {
+                val if val == self.syntax_elements.declaration_names.get("return").unwrap() => { if let Some(parent) = parent_ref.as_mut() {
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
                     let block_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -126,7 +134,7 @@ pub struct Tokenizer {
                 }}
 
                 _ => {}
-            }}
+            }
 
             i += 1
         }
@@ -201,7 +209,7 @@ pub struct Tokenizer {
         return Token::DECLARATION(declaration)
     }
 
-    fn parse_function(&self, declaration: Vec<String>) -> Token {
+    fn parse_function(&mut self, declaration: Vec<String>) -> Token {
         println!("coding_language::tokenizer::Tokenizer::parse_function()");
 
         // Get necessary characters

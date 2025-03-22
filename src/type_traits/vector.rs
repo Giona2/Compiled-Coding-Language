@@ -63,10 +63,6 @@ pub trait StringVecExtra {
 }
 
 impl StringVecExtra for Vec<String> {
-    fn find_after_index(&self, index: usize, pattern: &str) -> Option<usize> {}
-
-    fn find(&self, pattern: &str) -> Option<usize> {}
-
     fn sort_by_size(&self) -> Vec<String> {
         fn sort_by_size_recur(vector: Vec<String>, current_index: usize) -> Vec<String> {
             if current_index == vector.len() - 1 {
