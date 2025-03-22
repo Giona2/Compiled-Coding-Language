@@ -1,90 +1,107 @@
-use crate::tokenizer::enumerators::{Assignment, FloatAssignment, IntegerAssignment};
+use crate::tokenizer::enumerators::{Assignment, Operator};
 use crate::tokenizer::structures::VariableHistory;
+use crate::type_traits::integer::I64Extra;
 use crate::type_traits::float::F64Extra;
+use crate::type_traits::vector::VecExtra;
 
-use super::error::AssemblerError;
+use super::data::FUNCTION_ARGUMENT_REGISTERS;
+
 
 pub trait AssignmentToAssembly {
     /// Converts this assignment to a sequence of assembly instructions
-    /// 
-    /// If the assignment is a calculation, all calculations will be performed by first pushing the using the call
-    /// register (`rax`, for example), clearing it, and performing all calculations using that freed register
     ///
-    /// Note that after you assign the final calculation to a variable you should to return the
-    /// original value of the used register to minimize risk of segmentation faults and other
-    /// miscellaneous bugs/errors (`pop rax`, for example)
+    /// All equations will be conducted using and end up in the `rdi` register, if you need to
+    /// assign the result to a variable, it will be heald in the `rdi` register
     ///
-    /// # Examples
-    ///
-    /// ## Equations with constants
-    /// ```rust
-    /// let assignment = Assignment.from_string_vec(/* Stack Memory Obj */, vec![
-    ///     "3", "+", "2"
-    /// ].into_iter().map(|x| x.to_string()).collect())
-    ///
-    /// let assembly_equivalent = assignment.to_assembly(/* Stack Memory Obj */);
-    /// 
-    /// // Result
-    /// // ---
-    /// // push rax
-    /// // mov rax, 3
-    /// // add rax, 2
-    /// // ---
-    /// println!("{assembly_equivalent:?}");
-    /// ```
-    ///
-    /// ## Equations with variables
-    /// ```rust
-    /// let stack_step = 8;
-    /// let mut stack = VariableHistory.init(stack_step);
-    /// stack.add_variable("x", /* Data Type*/);
-    /// stack.add_variable("y", /* Data Type*/);
-    ///
-    /// let assignment = Assignment.from_string_vec(stack, vec![
-    ///     "x", "+", "y"
-    /// ].into_iter().map(|x| x.to_string()).collect());
-    ///
-    /// let assembly_equivalent = assignment.to_assembly(stack);
-    /// 
-    /// // Result (the comments will not be included in the result)
-    /// // ---
-    /// // push rax
-    /// // ; X is held in the first register slot
-    /// // mov rax, [rbp-{stack_step * 1}]
-    /// // ; Y is held in the second register slot
-    /// // add rax, [rbp-{stack_step * 2}]
-    /// // ---
-    /// println!("{assembly_equivalent:?}");
-    /// ```
-    /// 
-    /// ## Single assignments
-    /// ```rust
-    /// let assignment = Assignment.from_string_vec(/* Stack Memory Obj */, vec![
-    ///     "3", "+", "2"
-    /// ].into_iter().map(|x| x.to_string()).collect())
-    ///
-    /// let assembly_equivalent = assignment.to_assembly(/* Stack Memory Obj */);
-    /// 
-    /// // Result
-    /// // ---
-    /// // push rax
-    /// // mov rax, 3
-    /// // add rax, 2
-    /// // ---
-    /// println!("{assembly_equivalent:?}");
-    /// ```
-    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String>;
-
-    /// Converts either CONST() or VAR() to its assembly value
-    fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError>;
+    /// Note that the rax register is reserved for performing arithmetic with the result of this
+    /// function
+    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String>;
 }
 
+impl AssignmentToAssembly for Assignment {
+    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
+        Self::EVAL(first_term_raw, operation, second_term_raw) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
 
+            let first_term  = first_term_raw.to_assembly(variable_history);
+            let second_term = second_term_raw.to_assembly(variable_history);
+
+            returned_instructions.append_immut(&first_term);
+            returned_instructions.append(&mut vec![
+                format!("  mov rax, rdi")
+            ]);
+            returned_instructions.append_immut(&second_term);
+
+            match operation {
+                Operator::ADD => { returned_instructions.append(&mut vec![
+                    format!("  add rax, rdi")
+                ]);}
+                Operator::SUB => { returned_instructions.append(&mut vec![
+                    format!("  sub rax, rdi")
+                ]);}
+                Operator::MUL => { returned_instructions.append(&mut vec![
+                    format!("  imul rax, rdi")
+                ]);}
+                _ => {panic!("Not yet implemented")}
+            }
+
+            return returned_instructions
+        }
+
+        Self::INTEGER(returned_number) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
+
+            returned_instructions.append(&mut vec![
+                format!("{}", returned_number.to_assembly_value()),
+            ]);
+
+            return returned_instructions
+        }
+
+        Self::FLOAT(returned_number) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
+
+            returned_instructions.append(&mut vec![
+                format!("mov rax, {}", returned_number.to_assembly_value()),
+            ]);
+
+            return returned_instructions
+        }
+
+        Self::FUNC(function_name, function_args) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
+
+            // Write the function arguments
+            for (argument_index, argument) in function_args.iter().enumerate() { returned_instructions.append(&mut vec![
+                format!("  mov {}, {}", FUNCTION_ARGUMENT_REGISTERS[argument_index], argument.to_assembly(variable_history)[0]),
+            ])};
+
+            // Call the function
+            returned_instructions.append(&mut vec![
+                format!("  call {}", function_name),
+            ]);
+
+            return returned_instructions;
+        }
+
+        Self::VAR(variable_index) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
+
+            returned_instructions.append(&mut vec![
+                format!("  mov rdi, QWORD [rbp-{}]", variable_history.step * (variable_index+1)),
+            ]);
+
+            return returned_instructions
+        }
+    }}
+}
+
+/*
 impl AssignmentToAssembly for IntegerAssignment {
-    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
+    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
         Self::ADD(term_1, term_2)    => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, {}", term_1_value),
@@ -92,8 +109,8 @@ impl AssignmentToAssembly for IntegerAssignment {
             ]
         }
         Self::SUB(term_1, term_2)    => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, {}", term_1_value),
@@ -101,8 +118,8 @@ impl AssignmentToAssembly for IntegerAssignment {
             ]
         }
         Self::MUL(term_1, term_2)    => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, {}", term_1_value),
@@ -113,22 +130,22 @@ impl AssignmentToAssembly for IntegerAssignment {
             format!("  mov rax, {}", constant),
         ].iter().map(|x| x.to_string()).collect()}
         Self::VAR(variable_location) => { return vec![
-            format!("  mov rax, QWORD [rbp-{}]", stack_memory.step * (variable_location+1)),
+            format!("  mov rax, QWORD [rbp-{}]", variable_history.step * (variable_location+1)),
         ].iter().map(|x| x.to_string()).collect()}
     }}
 
-    fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError> { match self {
+    fn term_to_assembly_value(&self, variable_history: &VariableHistory) -> Result<String, AssemblerError> { match self {
         IntegerAssignment::CONST(constant)        => { Ok(constant.to_string()) }
-        IntegerAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
+        IntegerAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", variable_history.step * (variable_location+1))) }
                                          _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
     }}
 }
 
 impl AssignmentToAssembly for FloatAssignment {
-    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
+    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
         Self::ADD(term_1, term_2)    => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, __float64__({})", term_1_value),
@@ -140,8 +157,8 @@ impl AssignmentToAssembly for FloatAssignment {
             ]
         }
         Self::SUB(term_1, term_2)    => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, __float64__({})", term_1_value),
@@ -153,8 +170,8 @@ impl AssignmentToAssembly for FloatAssignment {
             ]
         }
         Self::MUL(term_1, term_2)    => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, __float64__({})", term_1_value),
@@ -166,8 +183,8 @@ impl AssignmentToAssembly for FloatAssignment {
             ]
         }
         Self::DIV(term_1, term_2) => {
-            let term_1_value = term_1.term_to_assembly_value(stack_memory).unwrap();
-            let term_2_value = term_2.term_to_assembly_value(stack_memory).unwrap();
+            let term_1_value = term_1.term_to_assembly_value(variable_history).unwrap();
+            let term_2_value = term_2.term_to_assembly_value(variable_history).unwrap();
 
             return vec![
                 format!("  mov rax, __float64__({})", term_1_value),
@@ -182,24 +199,25 @@ impl AssignmentToAssembly for FloatAssignment {
             format!("  mov rax, __float64__({})", constant.to_assembly_value()),
         ].iter().map(|x| x.to_string()).collect()}
         Self::VAR(variable_location) => { return vec![
-            format!("  mov rax, QWORD [rbp-{}]", stack_memory.step * (variable_location+1)),
+            format!("  mov rax, QWORD [rbp-{}]", variable_history.step * (variable_location+1)),
         ].iter().map(|x| x.to_string()).collect()}
     }}
 
-    fn term_to_assembly_value(&self, stack_memory: &VariableHistory) -> Result<String, AssemblerError> { match self {
+    fn term_to_assembly_value(&self, variable_history: &VariableHistory) -> Result<String, AssemblerError> { match self {
         FloatAssignment::CONST(constant)        => { Ok(constant.to_assembly_value()) }
-        FloatAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", stack_memory.step * (variable_location+1))) }
+        FloatAssignment::VAR(variable_location) => { Ok(format!("QWORD [rbp-{}]", variable_history.step * (variable_location+1))) }
                                               _ => { Err(AssemblerError::ValueRetrievedIsNotATerm) }
     }}
 }
 
 impl AssignmentToAssembly for Assignment {
-    fn to_assembly(&self, stack_memory: &VariableHistory) -> Vec<String> { match self {
-        Assignment::FLOAT(float_assignent)      => { return float_assignent.to_assembly(stack_memory) }
-        Assignment::INTEGER(integer_assignment) => { return integer_assignment.to_assembly(stack_memory) }
+    fn to_assembly(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
+        Assignment::FLOAT(float_assignent)      => { return float_assignent.to_assembly(variable_history) }
+        Assignment::INTEGER(integer_assignment) => { return integer_assignment.to_assembly(variable_history) }
     }}
 
     fn term_to_assembly_value(&self, _: &VariableHistory) -> Result<String, AssemblerError> {
         panic!("Not compatible")
     }
 }
+*/

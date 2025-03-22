@@ -5,9 +5,9 @@ use std::process;
 mod tokenizer;
     use tokenizer::Tokenizer;
 
-/*mod assembler;
+mod assembler;
     use assembler::Assembler;
-*/
+
 
 mod optimizer;
     use optimizer::Optimizer;
@@ -31,7 +31,6 @@ fn main() {
     tokenizer.create_token_tree(&optimizer.content);
     println!("Token Tree: {:?}", tokenizer.token_tree);
 
-    /*
     // Essemble the generated token tree
     let mut assembler = Assembler::init();
     assembler.generate_instructions(&tokenizer.token_tree).unwrap();
@@ -59,8 +58,6 @@ fn main() {
         .expect("Failed to remove a.o");
     //fs::remove_file("output.asm")
     //    .expect("Failed to remove output.asm");
-
-    */
 }
 
 #[cfg(test)]

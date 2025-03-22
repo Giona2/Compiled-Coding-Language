@@ -123,7 +123,7 @@ impl StringVecExtra for Vec<String> {
 }
 
 
-pub trait VecExtra<T: Eq> {
+pub trait VecExtra<T: Eq + Clone> {
     /// Returns the index of the first instance of `pattern` in this vector
     ///
     /// Returns None if `pattern` is not found in this vector
@@ -136,8 +136,13 @@ pub trait VecExtra<T: Eq> {
 
     /// Returns the index of the first matched pattern after a given index
     fn find_after_index(&self, index: usize, pattern: &T) -> Option<usize>;
+
+    /// Copys all elements from `other` and appends them into this vector
+    ///
+    /// This does not require the other vector be mutable
+    fn append_immut(&mut self, appended_slice: &[T]);
 }
-impl<T: Eq> VecExtra<T> for Vec<T> {
+impl<T: Eq + Clone> VecExtra<T> for Vec<T> {
     fn find(&self, pattern: &T) -> Option<usize> {
         let mut result: Option<usize> = None;
 
@@ -175,5 +180,11 @@ impl<T: Eq> VecExtra<T> for Vec<T> {
         }
 
         return result
+    }
+
+    fn append_immut(&mut self, appended_slice: &[T]) {
+        for element in appended_slice.iter() {
+            self.push(element.clone());
+        }
     }
 }

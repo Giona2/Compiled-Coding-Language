@@ -1,4 +1,6 @@
 pub trait F64Extra {
+    /// Converts this number into a string, where the returned string is formatted to cooperate
+    /// with the `NASM` assembler
     fn to_assembly_value(&self) -> String;
 
 } impl F64Extra for f64 {

@@ -1,8 +1,8 @@
 use std::vec;
 
-use crate::tokenizer::{
+use crate::{tokenizer::{
     declaration::Declaration, enumerators::Assignment, function::{Function, Return}, structures::VariableHistory, Token
-};
+}, type_traits::vector::VecExtra};
 
 
 #[allow(dead_code)]
@@ -13,8 +13,9 @@ pub mod error;
 pub mod types_translator;
     use types_translator::AssignmentToAssembly;
 
-
-const FUNCTION_ARGUMENT_REGISTERS: [&str; 6] = ["rdi", "rsi", "rdx", "r10", "r8", "r9"];
+#[allow(dead_code)]
+pub mod data;
+    use data::FUNCTION_ARGUMENT_REGISTERS;
 
 
 pub struct Assembler {
