@@ -27,17 +27,6 @@ pub trait StringVecExtra {
     /// ```
     fn find_after_index(&self, index: usize, pattern: &str) -> Option<usize>;
 
-    /// Returns the index of the first instance of `pattern` in this vector
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let my_vec: Vec<String> = vec!["2".to_string(), "3".to_string(), "4".to_string(), "3".to_string()]
-    ///
-    /// // index_of_3_after_1 = 1
-    /// let index_of_3: Vec<String> = my_vec.find("3")
-    /// ```
-    fn find(&self, pattern: &str) -> Option<usize>;
 
     /// Returns a reordered version of this `Vec<String>` where the longest string is at index `0`
     /// and the smallest string is at the last index
@@ -99,16 +88,7 @@ impl StringVecExtra for Vec<String> {
         return result
     }
 
-    fn find(&self, pattern: &str) -> Option<usize> {
-        let mut result: Option<usize> = None;
-
-        // Find the first instance of the given pattern
-        for (i, element) in self.iter().enumerate() {
-            if element == pattern { result = Some(i); break; }
-        }
-
-        return result
-    }
+    fn find(&self, pattern: &str) -> Option<usize> {}
 
     fn sort_by_size(&self) -> Vec<String> {
         fn sort_by_size_recur(vector: Vec<String>, current_index: usize) -> Vec<String> {
@@ -166,5 +146,47 @@ impl StringVecExtra for Vec<String> {
         }
 
         return (result, result_index)
+    }
+}
+
+
+pub trait VecExtra<T: Eq> {
+    /// Returns the index of the first instance of `pattern` in this vector
+    ///
+    /// Returns None if `pattern` is not found in this vector
+    fn find(&self, pattern: T) -> Option<usize>;
+
+    /// Returns the index of the first instance of any elements in `patterns` in this vector
+    ///
+    /// Returns None if none of the elements in `patterns` are found
+    fn find_from_vec(&self, patterns: Vec<T>) -> Option<usize>;
+
+}
+impl<T: Eq> VecExtra<T> for Vec<T> {
+    fn find(&self, pattern: T) -> Option<usize> {
+        let mut result: Option<usize> = None;
+
+        // Find the first instance of the given pattern
+        for (i, element) in self.iter().enumerate() {
+            if *element == pattern { result = Some(i); break; }
+        }
+
+        return result
+    }
+
+    fn find_from_vec(&self, patterns: Vec<T>) -> Option<usize> {
+        let mut result: Option<usize> = None;
+
+        for (element_index, element) in self.iter().enumerate() {
+            let mut pattern_found = false;
+
+            for pattern in patterns.iter() {
+                if element == pattern { result = Some(element_index); pattern_found = true; break; }
+            }
+
+            if pattern_found { break }
+        }
+
+        return result
     }
 }

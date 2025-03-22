@@ -37,7 +37,7 @@ pub trait StringStringHashMapExtra {
 
     fn len_of_largest(&self) -> usize;
 
-    fn values_contains(&self, target: &str) -> bool;
+    fn contains_value(&self, target: &str) -> bool;
 
 } impl StringStringHashMapExtra for HashMap<String, String> {
     fn values_of_size(&self, size: usize) -> Vec<String> {
@@ -64,7 +64,7 @@ pub trait StringStringHashMapExtra {
         return result
     }
 
-    fn values_contains(&self, target: &str) -> bool {
+    fn contains_value(&self, target: &str) -> bool {
         let mut result = false;
 
         for value in self.values() {

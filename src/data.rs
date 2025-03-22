@@ -30,6 +30,7 @@ pub const MEMORY_STEP: usize = 8;
 /// ```
 pub struct SyntaxElements {
     pub type_names: HashMap<String, String>,
+    pub declaration_names: HashMap<String, String>,
     pub math_symbols: HashMap<String, String>,
     pub assignment_symbols: HashMap<String, String>,
 
@@ -60,8 +61,12 @@ pub struct SyntaxElements {
             "integer"   => "int",
             "float"     => "flt",
             "character" => "chr",
-            "function"  => "subroutine",
-            "return"    => "expose",
+        ].to_string_hashmap(),
+
+        declaration_names: hashmap![
+            "variable" => "decl",
+            "function" => "subroutine",
+            "return"   => "expose",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![
@@ -74,6 +79,7 @@ pub struct SyntaxElements {
         assignment_symbols: hashmap![
             "equals"              => "=",
             "begin body"          => ":",
+            "set type"            => ":",
             "end body"            => ";",
             "end assignment"      => "\n",
             "begin conditions"    => "::[",

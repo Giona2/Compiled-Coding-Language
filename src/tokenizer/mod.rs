@@ -5,7 +5,7 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 #[allow(dead_code)]
 pub mod structures;
-    use structures::{Variable, VariableHistory};
+    use structures::{FunctionHistory, Variable, VariableHistory};
 
 #[allow(dead_code)]
 pub mod function;
@@ -41,12 +41,14 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
+    function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
 } impl Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
+        function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
 
@@ -56,7 +58,7 @@ pub struct Tokenizer {
         self.token_tree = token_tree;
     }
 
-    pub fn generate_token_tree(&self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+    pub fn generate_token_tree(&mut self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
@@ -64,8 +66,8 @@ pub struct Tokenizer {
             let current_word = content_to_tokenize[i].clone();
 
             // Declarion handling
-            if self.syntax_elements.type_names.values_contains(&current_word) { match &content_to_tokenize[i] {
-                val if val == self.syntax_elements.type_names.get("integer").unwrap() => { if let Some(parent) = parent_ref {
+            if self.syntax_elements.type_names.contains_value(&current_word) { match &content_to_tokenize[i] {
+                val if val == self.syntax_elements.type_names.get("variable").unwrap() => { if let Some(parent) = parent_ref {
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
                     let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -76,27 +78,7 @@ pub struct Tokenizer {
                     let declaration_to_evaluate = content_to_tokenize[i..declaration_stop_index].to_vec();
 
                     // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_integer(&mut parent.variable_history, declaration_to_evaluate);
-                    result.push(created_token);
-
-                    // Move the current word to one word after the end of this declaration and
-                    // continue the loop
-                    i = declaration_stop_index;
-                    continue;
-                }}
-
-                val if val == self.syntax_elements.type_names.get("float").unwrap() => { if let Some(parent) = parent_ref {
-                    // Get the first instance of the end assignment character after the
-                    // declaration (therefore ending it)
-                    let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
-                    let declaration_stop_index = content_to_tokenize.find_after_index(i, declaration_stop_char).unwrap();
-
-                    // Get the slice from this index (the declaration start) to the end
-                    // assignment char (the declaration end)
-                    let declaration_to_evaluate = content_to_tokenize[i..declaration_stop_index].to_vec();
-
-                    // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_float(&mut parent.variable_history, declaration_to_evaluate);
+                    let created_token = self.parse_variable(&mut parent.variable_history, declaration_to_evaluate);
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -117,6 +99,9 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_function(declaration_to_evaluate);
+                    if let Token::FUNCTION(function) = created_token.clone() {
+                        self.function_history.push(function);
+                    }
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -154,30 +139,39 @@ pub struct Tokenizer {
         return result
     }
 
-    fn parse_integer(&self, stack_memory: &mut VariableHistory, declaration: Vec<String>) -> Token {
+    fn parse_variable(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
+        // Get the necessary characters
+        let equals_char   = self.syntax_elements.assignment_symbols.get("equals").unwrap();
+        let set_type_char = self.syntax_elements.assignment_symbols.get("set type").unwrap();
+        
+
         // Parse the declaration
-        let equal_sign_index = declaration.find("=").unwrap();
+        let equal_sign_index = declaration.find(&equals_char).unwrap();
+        let set_type_index   = declaration.find(&set_type_char).unwrap();
 
         // Get the assignment part (everything after equals and before `;`)
         let string_assignment = declaration[equal_sign_index+1..declaration.len()].to_vec();
 
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
-        let data_type = DataType::check_token_type(&declaration[0]).unwrap();
-        let assignment = IntegerAssignment::from_string_vec(stack_memory, string_assignment).unwrap();
+        let data_type = DataType::check_token_type(&declaration[set_type_index+1]).unwrap();
+        let assignment: Assignment = match data_type {
+            DataType::INTEGER => { Assignment::INTEGER(IntegerAssignment::from_string_vec(variable_history, string_assignment).unwrap()) }
+            DataType::FLOAT   => { Assignment::FLOAT(FloatAssignment::from_string_vec(variable_history, string_assignment).unwrap())     }
+        };
 
-        // Add it to representation stack_memory
+        // Add it to representation variable_history
         let variable_representation = Variable {
             name: name.clone(),
             data_type: data_type.clone(),
         };
-        stack_memory.add_variable(variable_representation)
-            .expect("stack_memory does not conclude with None");
+        variable_history.add_variable(variable_representation)
+            .expect("variable_history does not conclude with None");
 
         // Build the declaration token
         let declaration = Declaration {
             name: name.to_string(),
-            location: stack_memory.find_variable(&name).unwrap(),
+            location: variable_history.find_variable(&name).unwrap(),
             data_type,
             value: Some(Assignment::INTEGER(assignment)),
         };
@@ -185,7 +179,7 @@ pub struct Tokenizer {
         return Token::DECLARATION(declaration)
     }
 
-    fn parse_float(&self, stack_memory: &mut VariableHistory, declaration: Vec<String>) -> Token {
+    fn parse_float(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
         // Parse the declaration
         let equal_sign_index = declaration.find("=").unwrap();
  
@@ -195,20 +189,20 @@ pub struct Tokenizer {
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
         let data_type = DataType::check_token_type(&declaration[0]).unwrap();
-        let assignment = FloatAssignment::from_string_vec(stack_memory, string_assignment).unwrap();
+        let assignment = FloatAssignment::from_string_vec(variable_history, string_assignment).unwrap();
 
-        // Add it to representation stack_memory
+        // Add it to representation variable_history
         let variable_representation = Variable {
             name: name.clone(),
             data_type: data_type.clone(),
         };
-        stack_memory.add_variable(variable_representation)
-            .expect("stack_memory does not conclude with None");
+        variable_history.add_variable(variable_representation)
+            .expect("variable_history does not conclude with None");
  
         // Build the declaration token
         let declaration = Declaration {
             name: name.clone(),
-            location: stack_memory.find_variable(&name).unwrap(),
+            location: variable_history.find_variable(&name).unwrap(),
             data_type,
             value: Some(Assignment::FLOAT(assignment)),
         };
@@ -247,7 +241,7 @@ pub struct Tokenizer {
             arguments.push( Variable::from_function_arg(argument.to_vec()) );
         }}
 
-        // Create the variable history and add the arguments to it
+        // Create the function's variable history and add the arguments to it
         let mut variable_history = VariableHistory::init(MEMORY_STEP);
         for argument in arguments.iter() {
             variable_history.add_variable(argument.to_owned()).unwrap();
