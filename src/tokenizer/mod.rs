@@ -5,6 +5,7 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 #[allow(dead_code)]
 pub mod structures;
+    use reassignment::Reassignment;
     use structures::{FunctionHistory, Variable, VariableHistory};
 
 #[allow(dead_code)]
@@ -37,6 +38,7 @@ pub enum Token {
     FUNCTION(Function),
     TERMINATINGLOOP(TerminatingLoop),
     DECLARATION(Declaration),
+    REASSIGNMENT(Reassignment),
     RETURN(Return),
 }
 
@@ -82,6 +84,26 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_variable(&mut parent.variable_history, declaration_to_evaluate);
+                    result.push(created_token);
+
+                    // Move the current word to one word after the end of this declaration and
+                    // continue the loop
+                    i = declaration_stop_index;
+                    continue;
+                }}
+
+                val if val == self.syntax_elements.declaration_names.get("reassignment").unwrap() => { if let Some(parent) = parent_ref {
+                    // Get the first instance of the end assignment character after the
+                    // declaration (therefore ending it)
+                    let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
+                    let declaration_stop_index = content_to_tokenize.find_after_index(i, declaration_stop_char).unwrap();
+
+                    // Get the slice from this index (the declaration start) to the end
+                    // assignment char (the declaration end)
+                    let declaration_to_evaluate = content_to_tokenize[i..declaration_stop_index].to_vec();
+
+                    // Parse the slice into a token and add it to the result
+                    let created_token = self.parse_reassignment(&parent.variable_history, declaration_to_evaluate);
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -142,11 +164,36 @@ pub struct Tokenizer {
         return result
     }
 
+    fn parse_reassignment(&self, variable_history: &VariableHistory, reassignment: Vec<String>) -> Token {
+        // Get the necessary characters
+        let equals_char   = self.syntax_elements.assignment_symbols.get("equals").unwrap();
+
+        // Parse the declaration
+        let equal_sign_index = reassignment.find(equals_char).unwrap();
+
+        // Get the assignment part (everything after equals and before `\n`)
+        let string_assignment = reassignment[equal_sign_index+1..reassignment.len()].to_vec();
+
+        // Retrieve the name of te variable and what it's newly assigned to
+        let name = reassignment[1].clone();
+        let new_assignment: Assignment = Assignment::from_string_vec(&self, variable_history, string_assignment);
+
+        // Ensure the variable is in variable_history
+        variable_history.find_variable(&name).expect("Variable does not exist");
+
+        // Build the declaration token
+        let reassignment_token = Reassignment {
+            name,
+            new_assignment,
+        };
+
+        return Token::REASSIGNMENT(reassignment_token)
+    }
+
     fn parse_variable(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
         // Get the necessary characters
         let equals_char   = self.syntax_elements.assignment_symbols.get("equals").unwrap();
         let set_type_char = self.syntax_elements.assignment_symbols.get("set type").unwrap();
-        
 
         // Parse the declaration
         let equal_sign_index = declaration.find(equals_char).unwrap();
@@ -172,7 +219,7 @@ pub struct Tokenizer {
             name: name.to_string(),
             location: variable_history.find_variable(&name).unwrap(),
             data_type,
-            value: Some(assignment),
+            value: assignment,
         };
 
         return Token::DECLARATION(declaration)

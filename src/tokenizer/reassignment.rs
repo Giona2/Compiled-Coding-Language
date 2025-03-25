@@ -1,7 +1,8 @@
 use super::enumerators::Assignment;
 
 
+#[derive(Debug, Clone)]
 pub struct Reassignment {
-    name: String,
-    new_assignment: Assignment,
-}
+    pub name: String,
+    pub new_assignment: Assignment,
+} 
