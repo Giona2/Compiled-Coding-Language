@@ -11,9 +11,9 @@ pub trait F64Extra {
         let result: String;
 
         if let Ok(integer) = integer_self {
-            result = integer.to_string() + ".0";
+            result = format!("__float64__({}.0)", integer.to_string());
         } else {
-            result = string_self;
+            result = format!("__float64__({})", string_self);
         }
 
         return result

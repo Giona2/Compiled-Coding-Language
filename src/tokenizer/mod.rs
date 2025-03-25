@@ -59,13 +59,11 @@ pub struct Tokenizer {
     }
 
     pub fn generate_token_tree(&mut self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
-        println!("coding_language::tokenizer::Tokenizer::generate_token_tree()");
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
         while i < content_to_tokenize.len() {
             let current_word = content_to_tokenize[i].clone();
-            println!("  current_word: {current_word:?}");
 
             // Declarion handling
             match &content_to_tokenize[i] {
@@ -90,7 +88,6 @@ pub struct Tokenizer {
                 }}
 
                 val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
-                    println!("  found function");
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
                     let block_stop_char = self.syntax_elements.assignment_symbols.get("end body").unwrap();
@@ -212,8 +209,6 @@ pub struct Tokenizer {
     */
 
     fn parse_function(&mut self, declaration: Vec<String>) -> Token {
-        println!("coding_language::tokenizer::Tokenizer::parse_function()");
-
         // Get necessary characters
         let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
             .unwrap();
@@ -234,7 +229,6 @@ pub struct Tokenizer {
         let inline_block_slice = declaration[block_start_index+1..].to_vec();
         let argument_slice_raw = declaration[begin_conditions_index+1..=end_conditions_index-1].to_vec();
         let argument_slice: Vec<&[String]> = argument_slice_raw.split(|x| x==",").collect();
-        println!("  argument_slice: {:?}", argument_slice);
 
         // Parse the arguments by iterating over each of them
         let mut arguments: Vec<Variable> = Vec::new();
@@ -271,9 +265,6 @@ pub struct Tokenizer {
     }
 
     fn parse_return(&self, parent: &Function, return_statement: Vec<String>) -> Token {
-        println!("coding_language::tokenizer::Tokenizer::parse_return()");
-        println!("  recieved: {:?}", return_statement);
-
         let assignment_slice = return_statement[1..].to_vec();
 
         let assignment: Assignment = {

@@ -1,12 +1,12 @@
 use super::error::TokenizerError;
 use super::Tokenizer;
-use crate::data::SyntaxElements;
-use super::structures::VariableHistory;
-use crate::type_traits::hashmap::{HashMapExtra, StringStringHashMapExtra};
+use crate::{assembler::data, data::SyntaxElements};
+use super::structures::{FunctionHistory, VariableHistory};
 use crate::type_traits::vector::VecExtra;
+use super::declaration::DataType;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
     ADD,
     SUB,
@@ -107,7 +107,7 @@ macro_rules! feq {
 #[derive(Debug, Clone)]
 pub enum Assignment {
     EVAL(Box<Assignment>, Operator, Box<Assignment>),
-    FUNC(String, Vec<Assignment>),
+    FUNC(String, DataType, Vec<Assignment>),
     VAR(usize),
     INTEGER(i64),
     FLOAT(f64),
@@ -154,6 +154,33 @@ pub enum Assignment {
         }*/
     }
 
+    /// Returns the data type this Assignment will become after evaluation
+    pub fn evaluate_type(&self, variable_history: &VariableHistory) -> DataType { match self {
+        Self::INTEGER(_) => { return DataType::INTEGER }
+        Self::FLOAT(_)   => { return DataType::FLOAT   }
+
+        Self::VAR(variable_location) => {
+            let variable = variable_history.data[*variable_location].clone().unwrap();
+
+            return variable.data_type
+        }
+
+        Self::FUNC(_, data_type, _) => {
+            return data_type.clone()
+        }
+
+        Self::EVAL(first_term, _, second_term) => {
+            let first_term_type  = first_term.evaluate_type(variable_history);
+            let second_term_type = second_term.evaluate_type(variable_history);
+
+            if first_term_type.is_float() || second_term_type.is_float() {
+                return DataType::FLOAT
+            } else {
+                return DataType::INTEGER
+            }
+        }
+    }}
+
     fn from_equation_term(tokenizer: &Tokenizer, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
         println!("coding_language::tokenizer::enumerators::Assignment::from_equation_term()");
         println!("  recieved: {term:?}");
@@ -177,7 +204,7 @@ pub enum Assignment {
             return Ok(Assignment::VAR(variable_location_index))
         }
         // Check if the declaration is a function
-        else if let Some(_) = tokenizer.function_history.find_by_name(&term[0]) {
+        else if let Some(function) = tokenizer.function_history.find_by_name(&term[0]) {
             // Find the begin and end args characters
             let begin_args_index = term.find(begin_args_char).unwrap();
             let end_args_index   = term.find(end_args_char).unwrap();
@@ -186,13 +213,12 @@ pub enum Assignment {
             let passed_args_slice: Vec<String> = term[begin_args_index+1..=end_args_index-1].to_vec();
             
             // Get the name of the function and make a list of all the arguments
-            let name = term[0].clone();
             let mut passed_args: Vec<Assignment> = Vec::new();
             if passed_args_slice.len() > 0 { for passed_argument_string in passed_args_slice.split(|x| x==",").into_iter() {
                 passed_args.push(Self::from_equation_term(tokenizer, variable_history, passed_argument_string.to_vec()).unwrap())
             }};
 
-            return Ok(Assignment::FUNC(name, passed_args));
+            return Ok(Assignment::FUNC(function.name, function.return_type, passed_args));
         }
         else {
             Err(TokenizerError::CouldNotParseTerm)

@@ -73,7 +73,7 @@ pub struct SyntaxElements {
             "addition"       => "+",
             "subtraction"    => "-",
             "multiplication" => "*",
-            "division"       => "+",
+            "division"       => "/",
         ].to_string_hashmap(),
 
         assignment_symbols: hashmap![

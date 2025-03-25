@@ -12,6 +12,21 @@ pub enum DataType {
         val if val == syntax_elements.type_names["float"]   => Some(Self::FLOAT),
                                                           _ => None,
     }}
+
+    pub fn is_integer(&self) -> bool {
+        if let Self::INTEGER = self {
+            return true
+        } else {
+            return false
+        }
+    }
+    pub fn is_float(&self) -> bool {
+        if let Self::FLOAT = self {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 
