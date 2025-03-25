@@ -64,9 +64,10 @@ pub struct SyntaxElements {
         ].to_string_hashmap(),
 
         declaration_names: hashmap![
-            "variable" => "decl",
-            "function" => "subroutine",
-            "return"   => "expose",
+            "variable"     => "decl",
+            "function"     => "subroutine",
+            "return"       => "expose",
+            "reassignment" => "chng",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![

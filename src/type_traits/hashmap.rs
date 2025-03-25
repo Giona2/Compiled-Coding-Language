@@ -66,8 +66,11 @@ pub trait StringStringHashMapExtra {
 
 
 pub trait HashMapExtra<T: Eq> {
-    /// Checks this hashmap to see if it contains `target` within its values
+    /// Checks this hashmap to see if it contains `target`
     fn contains_value(&self, target: &T) -> bool;
+
+    /// Checks this hashmap to see if it contains a pattern in 'targets'
+    fn contains_value_from_vec(&self, targets: &[T]) -> bool;
 
 } impl<T: Eq> HashMapExtra<T> for HashMap<String, T> {
     fn contains_value(&self, target: &T) -> bool {
@@ -75,6 +78,21 @@ pub trait HashMapExtra<T: Eq> {
 
         for value in self.values() {
             if value == target { result = true; break }
+        }
+
+        return result
+    }
+
+    fn contains_value_from_vec(&self, targets: &[T]) -> bool {
+        let mut result = false;
+
+        let mut match_is_found = false;
+        for value in self.values() {
+            for target in targets {
+                if value == target { result = true; match_is_found = true; break }
+            }
+
+            if match_is_found { break }
         }
 
         return result

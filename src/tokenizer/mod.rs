@@ -1,5 +1,5 @@
 use crate::type_traits::vector::VecExtra;
-use crate::type_traits::hashmap::StringStringHashMapExtra;
+use crate::type_traits::hashmap::{HashMapExtra, StringStringHashMapExtra};
 use crate::data::{SyntaxElements, MEMORY_STEP};
 
 
@@ -26,6 +26,9 @@ pub mod enumerators;
 
 #[allow(dead_code)]
 pub mod error;
+
+#[allow(dead_code)]
+pub mod reassignment;
 
 
 #[derive(Debug, Clone)]
@@ -66,7 +69,7 @@ pub struct Tokenizer {
             let current_word = content_to_tokenize[i].clone();
 
             // Declarion handling
-            match &content_to_tokenize[i] {
+            match &current_word {
                 val if val == self.syntax_elements.declaration_names.get("variable").unwrap() => { if let Some(parent) = parent_ref {
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
