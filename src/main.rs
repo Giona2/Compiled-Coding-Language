@@ -37,7 +37,7 @@ fn main() {
     
     // Write the assembled content to a file
     let program_content = assembler.instructions.join("\n");
-    fs::write("./output.asm", program_content)
+    fs::write("./build/output.asm", program_content)
         .expect("Failed to write a.asm");
 
     // Assemble (using nasm/ld) the final assembly file
@@ -46,11 +46,12 @@ fn main() {
         .args(["-f", "elf64"])
         .args(["-g"])
         .args(["-F", "dwarf"])
-        .args(["output.asm"])
+        .args(["build/output.asm"])
         .args(["-o", "a.o"])
         .status().unwrap();
     process::Command::new("ld")
         .args(["a.o"])
+        .args(["-o", "build/a.out"])
         .status().unwrap();
 
     // Clean up extra files
