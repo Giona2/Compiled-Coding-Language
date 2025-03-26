@@ -108,6 +108,7 @@ macro_rules! feq {
 pub enum Assignment {
     EVAL(Box<Assignment>, Operator, Box<Assignment>),
     FUNC(String, DataType, Vec<Assignment>),
+    BOOL(bool),
     VAR(usize),
     INTEGER(i64),
     FLOAT(f64),
@@ -158,6 +159,7 @@ pub enum Assignment {
     pub fn evaluate_type(&self, variable_history: &VariableHistory) -> DataType { match self {
         Self::INTEGER(_) => { return DataType::INTEGER }
         Self::FLOAT(_)   => { return DataType::FLOAT   }
+        Self::BOOL(_)    => { return DataType::BOOL    }
 
         Self::VAR(variable_location) => {
             let variable = variable_history.data[*variable_location].clone().unwrap();

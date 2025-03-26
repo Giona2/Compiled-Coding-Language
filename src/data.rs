@@ -33,6 +33,8 @@ pub struct SyntaxElements {
     pub declaration_names: HashMap<String, String>,
     pub math_symbols: HashMap<String, String>,
     pub assignment_symbols: HashMap<String, String>,
+    pub comparision_symbols: HashMap<String, String>,
+    pub comparision_names: HashMap<String, String>,
 
 } impl SyntaxElements {
     /// Initialize the SyntaxElements
@@ -88,6 +90,18 @@ pub struct SyntaxElements {
             "end conditions"      => "]",
             "return this"         => "->",
         ].to_string_hashmap(), 
+
+        comparision_symbols: hashmap![
+            "greater than"             => ">",
+            "greater than or equal to" => ">=",
+            "less than"                => "<",
+            "less than or equal to"    => "<=",
+        ].to_string_hashmap(),
+
+        comparision_names: hashmap![
+            "true"  => "true",
+            "false" => "false",
+        ].to_string_hashmap()
     }}                         
 
     /// Gets every value held in every HashMap as a Vec<String>
@@ -106,6 +120,14 @@ pub struct SyntaxElements {
             result.push(element_name);
         }
 
+        for (_, element_name) in self.comparision_symbols.clone() {
+            result.push(element_name);
+        }
+
+        for (_, element_name) in self.comparision_names.clone() {
+            result.push(element_name);
+        }
+
         return result;
     }
 
@@ -117,6 +139,10 @@ pub struct SyntaxElements {
         }
 
         for (_, element_name) in self.assignment_symbols.clone() {
+            result.push(element_name);
+        }
+
+        for (_, element_name) in self.comparision_symbols.clone() {
             result.push(element_name);
         }
 

@@ -6,6 +6,7 @@ use crate::data::SyntaxElements;
 pub enum DataType {
     INTEGER,
     FLOAT,
+    BOOL,
 } impl DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { let syntax_elements = SyntaxElements::init(); match word_to_check {
         val if val == syntax_elements.type_names["integer"] => Some(Self::INTEGER),
