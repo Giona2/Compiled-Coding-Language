@@ -1,7 +1,7 @@
 use std::vec;
 
 use crate::{tokenizer::{
-    declaration::Declaration, enumerators::Assignment, function::{Function, Return}, structures::VariableHistory, Token
+    declaration::Declaration, enumerators::Assignment, function::{Function, Return}, reassignment::Reassignment, structures::VariableHistory, Token
 }, type_traits::vector::VecExtra};
 
 
@@ -77,6 +77,9 @@ impl Assembler {
             Token::DECLARATION(declaration) => {
                 function_instructions.append(&mut self.assemble_declaration(&function.variable_history, declaration));
             }
+            Token::REASSIGNMENT(reassignment) => {
+                function_instructions.append(&mut self.assemble_reassignment(&function.variable_history, reassignment));
+            }
             Token::RETURN(return_statement) => {
                 function_instructions.append(&mut self.assemble_return(&function.variable_history, return_statement));
             }
@@ -114,12 +117,26 @@ impl Assembler {
         let appended_instructions: Vec<String> = vec![
             vec![
                 format!("  sub rsp, {}", stack_memory.step),
-                format!("  push rax"),
             ],
             assignment_instructions,
             vec![
+                format!("  mov rax, rdi"),
                 format!("  mov QWORD [rbp-{}], rax", (declaration.location+1) * stack_memory.step),
-                format!("  pop rax"),
+            ],
+        ].concat().iter().map(|x| x.to_string()).collect();
+        return appended_instructions
+    }
+
+    fn assemble_reassignment(&self, variable_history: &VariableHistory, reassignment: &Reassignment) -> Vec<String> {
+        let assignment_instructions = reassignment.new_assignment.clone().to_assembly_instructions(variable_history);
+
+        let variable_location = variable_history.find_variable(&reassignment.name).unwrap();
+
+        let appended_instructions: Vec<String> = vec![
+            assignment_instructions,
+            vec![
+                format!("  mov rax, rdi"),
+                format!("  mov QWORD [rbp-{}], rax", (variable_location+1) * variable_history.step),
             ],
         ].concat().iter().map(|x| x.to_string()).collect();
         return appended_instructions

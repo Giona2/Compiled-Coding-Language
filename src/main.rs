@@ -66,6 +66,7 @@ mod testing {
 
     use crate::optimizer::Optimizer;
     use crate::tokenizer::Tokenizer;
+    use crate::assembler::Assembler;
 
 
     #[test]
@@ -88,7 +89,7 @@ mod testing {
         println!("Token Tree: {:?}", tokenizer.token_tree);
     }
 
-    /*#[test]
+    #[test]
     fn assemble() {
         // Read from file and flatten it
         let file_content: String = fs::read_to_string("./examples/main.uml")
@@ -107,5 +108,5 @@ mod testing {
         for instruction in assembler.instructions {
             println!("{instruction}");
         }
-    }*/
+    }
 }

@@ -1,7 +1,7 @@
 use super::error::TokenizerError;
 use super::Tokenizer;
-use crate::{assembler::data, data::SyntaxElements};
-use super::structures::{FunctionHistory, VariableHistory};
+use crate::data::SyntaxElements;
+use super::structures::VariableHistory;
 use crate::type_traits::vector::VecExtra;
 use super::declaration::DataType;
 

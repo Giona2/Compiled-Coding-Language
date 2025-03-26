@@ -1,7 +1,6 @@
 use crate::tokenizer::declaration::DataType;
 use crate::tokenizer::enumerators::{Assignment, Operator};
 use crate::tokenizer::structures::VariableHistory;
-use crate::tokenizer::structures::FunctionHistory;
 use crate::type_traits::integer::I64Extra;
 use crate::type_traits::float::F64Extra;
 use crate::type_traits::vector::VecExtra;
@@ -93,7 +92,9 @@ impl AssignmentToAssembly for Assignment {
 
             // Prefix the math equation by storing the result into the rdi register
             match self.evaluate_type(variable_history) {
-                DataType::INTEGER => {}
+                DataType::INTEGER => { returned_instructions.append(&mut vec![
+                    format!("  mov rdi, rax")
+                ]); }
                 DataType::FLOAT => { returned_instructions.append(&mut vec![
                     format!("  movq rdi, xmm0")
                 ]);}
