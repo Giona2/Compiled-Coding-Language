@@ -11,6 +11,7 @@ pub enum DataType {
     pub fn check_token_type(word_to_check: &str) -> Option<Self> { let syntax_elements = SyntaxElements::init(); match word_to_check {
         val if val == syntax_elements.type_names["integer"] => Some(Self::INTEGER),
         val if val == syntax_elements.type_names["float"]   => Some(Self::FLOAT),
+        val if val == syntax_elements.type_names["boolean"] => Some(Self::BOOL),
                                                           _ => None,
     }}
 

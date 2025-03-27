@@ -13,4 +13,6 @@ pub enum TokenizerError {
     CouldNotParseTerm,
     #[error("Operator could not parse this math operator")]
     CouldNotParseMathOperator,
+    #[error("Operator could not parse this comparison operator")]
+    CouldNotParseComparisonOperator,
 }

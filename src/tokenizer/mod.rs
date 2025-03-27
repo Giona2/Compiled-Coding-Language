@@ -191,6 +191,9 @@ pub struct Tokenizer {
     }
 
     fn parse_variable(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
+        println!("coding_language::tokenizer::Tokenizer::parse_variable()");
+        println!("  recieved: {:?}", declaration);
+
         // Get the necessary characters
         let equals_char   = self.syntax_elements.assignment_symbols.get("equals").unwrap();
         let set_type_char = self.syntax_elements.assignment_symbols.get("set type").unwrap();

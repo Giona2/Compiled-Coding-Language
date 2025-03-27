@@ -63,6 +63,7 @@ pub struct SyntaxElements {
             "integer"   => "int",
             "float"     => "flt",
             "character" => "chr",
+            "boolean"   => "bol",
         ].to_string_hashmap(),
 
         declaration_names: hashmap![
@@ -147,5 +148,19 @@ pub struct SyntaxElements {
         }
 
         return result;
+    }
+
+    pub fn get_all_operator_symbols(&self) -> Vec<String> {
+        let mut result = Vec::new();
+
+        for (_, element_name) in self.math_symbols.clone() {
+            result.push(element_name);
+        }
+
+        for (_, element_name) in self.comparision_symbols.clone() {
+            result.push(element_name);
+        }
+
+        return result
     }
 }

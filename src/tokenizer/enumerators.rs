@@ -1,18 +1,19 @@
 use super::error::TokenizerError;
 use super::Tokenizer;
 use crate::data::SyntaxElements;
+use crate::type_traits::hashmap::HashMapExtra;
 use super::structures::VariableHistory;
 use crate::type_traits::vector::VecExtra;
 use super::declaration::DataType;
 
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Operator {
+pub enum MathOperator {
     ADD,
     SUB,
     MUL,
     DIV,
-} impl Operator {
+} impl MathOperator {
     /// Converts a string of the accociated operator with a variant of `Operator`
     ///
     /// Returns Err() if an incorrect symbol was given
@@ -35,6 +36,40 @@ pub enum Operator {
             }
             _ => {
                 return Err(TokenizerError::CouldNotParseMathOperator)
+            }
+        }
+    }
+}
+
+
+#[derive(Debug, Clone)]
+pub enum ComparisonOperator {
+    /// Greater Than
+    GT,
+    /// Less Than
+    LT,
+    /// Greater Than or Equal to
+    GE,
+    /// Less Than or Equal to
+    LE,
+} impl ComparisonOperator {
+    pub fn from_string(from: &str) -> Result<Self, TokenizerError> {
+        let syntax_elements = SyntaxElements::init();
+        match from {
+            val if val == syntax_elements.comparision_symbols["greater than"] => {
+                return Ok(Self::GT)
+            }
+            val if val == syntax_elements.comparision_symbols["greater than or equal to"] => {
+                return Ok(Self::GE)
+            }
+            val if val == syntax_elements.comparision_symbols["less than"] => {
+                return Ok(Self::LT)
+            }
+            val if val == syntax_elements.comparision_symbols["less than or equal to"] => {
+                return Ok(Self::LE)
+            }
+            _ => {
+                return Err(TokenizerError::CouldNotParseComparisonOperator)
             }
         }
     }
@@ -106,9 +141,10 @@ macro_rules! feq {
 
 #[derive(Debug, Clone)]
 pub enum Assignment {
-    EVAL(Box<Assignment>, Operator, Box<Assignment>),
+    EVAL(Box<Assignment>, MathOperator, Box<Assignment>),
+    CMP(Box<Assignment>, ComparisonOperator, Box<Assignment>),
     FUNC(String, DataType, Vec<Assignment>),
-    BOOL(bool),
+    BOOL(i8),
     VAR(usize),
     INTEGER(i64),
     FLOAT(f64),
@@ -120,23 +156,20 @@ pub enum Assignment {
 
         let syntax_elements = SyntaxElements::init();
 
-        let math_symbols: Vec<String> = syntax_elements.math_symbols.clone()
-            .values()
-            .map(|x|x.to_string())
-            .collect();
+        let operator_symbols = syntax_elements.get_all_operator_symbols();
 
         // If the equation given is just one element
-        if string_equation.len() == 1 || string_equation.find_from_vec(&math_symbols).is_none() {
+        if string_equation.len() == 1 || string_equation.find_from_vec(&operator_symbols).is_none() {
             return Self::from_equation_term(tokenizer, variable_history, string_equation).unwrap()
         }
 
         // Get the location of the math symbol
-        let math_symbol_index = string_equation.find_from_vec(&math_symbols).unwrap();
-        let math_symbol = string_equation[math_symbol_index].clone();
+        let operator_symbol_index = string_equation.find_from_vec(&operator_symbols).unwrap();
+        let operator_symbol = string_equation[operator_symbol_index].clone();
 
         // Get the first and second terms
-        let first_term_slice  = string_equation[..=math_symbol_index-1].to_owned();
-        let second_term_slice = string_equation[math_symbol_index+1..].to_owned();
+        let first_term_slice  = string_equation[..=operator_symbol_index-1].to_owned();
+        let second_term_slice = string_equation[operator_symbol_index+1..].to_owned();
 
         // Parse the first and second terms
         let first_term  = Self::from_equation_term(tokenizer, variable_history, first_term_slice ).unwrap();
@@ -144,7 +177,15 @@ pub enum Assignment {
 
         // Return the evaluation of the first term and the second term operating with the given
         // math symbol
-        return Self::EVAL(Box::new(first_term), Operator::from_string(&math_symbol).unwrap(), Box::new(second_term));
+        if syntax_elements.math_symbols.contains_value(&operator_symbol) {
+            return Self::EVAL(Box::new(first_term), MathOperator::from_string(&operator_symbol).unwrap(), Box::new(second_term));
+        }
+        else if syntax_elements.comparision_symbols.contains_value(&operator_symbol) {
+            return Self::CMP(Box::new(first_term), ComparisonOperator::from_string(&operator_symbol).unwrap(), Box::new(second_term))
+        }
+        else {
+            panic!("Math operator not found");
+        }
 
         /*match string_equation[1].as_str() {
             "+" => Ok(*feq!(first_term, ADD, second_term)),
@@ -157,9 +198,10 @@ pub enum Assignment {
 
     /// Returns the data type this Assignment will become after evaluation
     pub fn evaluate_type(&self, variable_history: &VariableHistory) -> DataType { match self {
-        Self::INTEGER(_) => { return DataType::INTEGER }
-        Self::FLOAT(_)   => { return DataType::FLOAT   }
-        Self::BOOL(_)    => { return DataType::BOOL    }
+        Self::INTEGER(_)   => { return DataType::INTEGER }
+        Self::FLOAT(_)     => { return DataType::FLOAT   }
+        Self::BOOL(_)      => { return DataType::BOOL    }
+        Self::CMP(_, _, _) => { return DataType::BOOL    }
 
         Self::VAR(variable_location) => {
             let variable = variable_history.data[*variable_location].clone().unwrap();
@@ -183,6 +225,7 @@ pub enum Assignment {
         }
     }}
 
+    /// Parses a singular term in an equation (functions, numbers) into Self
     fn from_equation_term(tokenizer: &Tokenizer, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
         println!("coding_language::tokenizer::enumerators::Assignment::from_equation_term()");
         println!("  recieved: {term:?}");
@@ -200,6 +243,16 @@ pub enum Assignment {
         // Check if the declaration is a float
         else if let Ok(returned_number) = term[0].clone().parse::<f64>() {
             return Ok(Assignment::FLOAT(returned_number))
+        }
+        // Chech if the declaration is a boolean value
+        else if syntax_elements.comparision_names.contains_value(&term[0]) {
+            if term[0] == syntax_elements.comparision_names["true"] {
+                return Ok(Assignment::BOOL(1))
+            } else if term[0] == syntax_elements.comparision_names["false"] {
+                return Ok(Assignment::BOOL(0))
+            } else {
+                return Err(TokenizerError::CouldNotParseTerm)
+            }
         }
         // Check if the declaration is a variable
         else if let Some(variable_location_index) = variable_history.find_variable(&term[0]) {
