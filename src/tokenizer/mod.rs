@@ -117,9 +117,11 @@ pub struct Tokenizer {
                     continue;
                 }}
 
-                val if val == self.syntax_elements.declaration_names.get("if statement conditional").unwrap() => { if let Some(parent) = parent_ref {
+                val if val == self.syntax_elements.declaration_names.get("if conditional statement").unwrap() => { if let Some(parent) = parent_ref {
                     // Find the declaration_stop
-                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, i).unwrap();
+                    let block_start_char = self.syntax_elements.assignment_symbols.get("begin body").unwrap();
+                    let block_start_index = content_to_tokenize.find_after_index(i, block_start_char).unwrap();
+                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, block_start_index).unwrap();
 
                     // Get the slice from this index (the declaration start) to the
                     // block char (the declaration end)
@@ -138,7 +140,9 @@ pub struct Tokenizer {
                 val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
-                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, i).unwrap();
+                    let block_start_char = self.syntax_elements.assignment_symbols.get("begin body").unwrap();
+                    let block_start_index = content_to_tokenize.find_after_index(i, block_start_char).unwrap();
+                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, block_start_index).unwrap();
 
                     // Get the slice from this index (the declaration start) to the
                     // block char (the declaration end)
@@ -227,6 +231,9 @@ pub struct Tokenizer {
     }
 
     fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: &Vec<String>) -> Result<Token, TokenizerError> {
+        println!("coding_language::tokenizer::Tokenizer::parse_conditional_statement()");
+        println!("  recieved: {conditional_statement:?}");
+
         // Get necessary characters
         let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
             .unwrap();
@@ -291,19 +298,22 @@ pub struct Tokenizer {
         println!("  recieved: {:?}", declaration);
 
         // Get the necessary characters
-        let equals_char   = self.syntax_elements.assignment_symbols.get("equals").unwrap();
-        let set_type_char = self.syntax_elements.assignment_symbols.get("set type").unwrap();
+        let equals_char         = self.syntax_elements.assignment_symbols.get("equals").unwrap();
+        let begin_set_type_char = self.syntax_elements.assignment_symbols.get("begin set type").unwrap();
+        let end_set_type_char   = self.syntax_elements.assignment_symbols.get("end set type").unwrap();
 
         // Parse the declaration
-        let equal_sign_index = declaration.find(equals_char).unwrap();
-        let set_type_index   = declaration.find(set_type_char).unwrap();
+        let equal_sign_index     = declaration.find(equals_char).unwrap();
+        let begin_set_type_index = declaration.find(begin_set_type_char).unwrap();
+        let end_set_type_index   = declaration.find(end_set_type_char).unwrap();
 
         // Get the assignment part (everything after equals and before `;`)
         let string_assignment = declaration[equal_sign_index+1..declaration.len()].to_vec();
+        let data_type_slice = declaration[begin_set_type_index+1..=end_set_type_index-1].to_vec();
 
         // Retrieve the name of te variable, its data_type, and what it's assigned to
         let name = declaration[1].clone();
-        let data_type = DataType::check_token_type(&declaration[set_type_index+1]).unwrap();
+        let data_type = DataType::check_token_type(&data_type_slice[0]).unwrap();
         let assignment: Assignment = Assignment::from_string_vec(&self, variable_history, string_assignment);
         // Add it to representation variable_history
         let variable_representation = Variable {
@@ -358,6 +368,9 @@ pub struct Tokenizer {
     */
 
     fn parse_function(&mut self, declaration: Vec<String>) -> Token {
+        println!("coding_language::tokenizer::Tokenizer::parse_function()");
+        println!("  recieved: {declaration:?}");
+
         // Get necessary characters
         let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
             .unwrap();

@@ -86,8 +86,9 @@ pub struct SyntaxElements {
         assignment_symbols: hashmap![
             "equals"              => "=",
             "begin body"          => ":",
-            "set type"            => ":",
             "end body"            => ";",
+            "begin set type"      => ":-[",
+            "end set type"        => "]",
             "end assignment"      => "\n",
             "begin conditions"    => "::[",
             "condition seperator" => ",",

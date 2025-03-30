@@ -45,7 +45,7 @@ impl Assembler {
 
         // Iterate over each token and translate it accordingly
         for token in token_tree.iter() { match token {
-            Token::FUNCTION(function) => program_instructions.append(&mut self.assemble_function(function)),
+            Token::Function(function) => program_instructions.append(&mut self.assemble_function(function)),
             _ => {}
         }}
 
@@ -78,13 +78,13 @@ impl Assembler {
 
         // Assemble the functionality
         for token in function.functionaliy.iter() { match token {
-            Token::DECLARATION(declaration) => {
+            Token::Declaration(declaration) => {
                 function_instructions.append(&mut self.assemble_declaration(&function.variable_history, declaration));
             }
-            Token::REASSIGNMENT(reassignment) => {
+            Token::Reassignment(reassignment) => {
                 function_instructions.append(&mut self.assemble_reassignment(&function.variable_history, reassignment));
             }
-            Token::RETURN(return_statement) => {
+            Token::Return(return_statement) => {
                 function_instructions.append(&mut self.assemble_return(&function.variable_history, return_statement));
             }
             _ => {}
