@@ -24,7 +24,8 @@ pub mod enumerators;
     use enumerators::Assignment;
 
 #[allow(dead_code)]
-pub mod error;
+mod error;
+    use error::TokenizerError;
 
 #[allow(dead_code)]
 pub mod reassignment;
@@ -116,11 +117,28 @@ pub struct Tokenizer {
                     continue;
                 }}
 
+                val if val == self.syntax_elements.declaration_names.get("if statement conditional").unwrap() => { if let Some(parent) = parent_ref {
+                    // Find the declaration_stop
+                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, i).unwrap();
+
+                    // Get the slice from this index (the declaration start) to the
+                    // block char (the declaration end)
+                    let declaration_to_evaluate = content_to_tokenize[i..=declaration_stop_index].to_vec();
+
+                    // Parse the slice into a token and add it to the result
+                    let created_token = self.parse_conditional_statement(parent, &declaration_to_evaluate).unwrap();
+                    result.push(created_token);
+
+                    // Move the current word to one word after the end of this declaration and
+                    // continue the loop
+                    i = declaration_stop_index;
+                    continue;
+                }}
+
                 val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
-                    let block_stop_char = self.syntax_elements.assignment_symbols.get("end body").unwrap();
-                    let declaration_stop_index = content_to_tokenize.find_after_index(i, &block_stop_char).unwrap();
+                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, i).unwrap();
 
                     // Get the slice from this index (the declaration start) to the
                     // block char (the declaration end)
@@ -168,9 +186,83 @@ pub struct Tokenizer {
         return result
     }
 
+    /// Finds the index of the end of a code block given the start of said block
+    ///
+    /// This is usefull for finding the end of a function containing blocks within itself (if
+    /// statements, for example)
+    ///
+    /// Note that you should place the start_index at the beginning of the block
+    fn find_end_of_block(&self, content: &[String], start_index: usize) -> Result<usize, TokenizerError> {
+        // Keep track of the end_of_block_index
+        let mut end_of_block_index: Option<usize> = None;
+
+        // Keep track of the amount of blocks currently counted
+        let mut current_block_counter: usize = 0;
+
+        // Iterate through each character
+        let mut i = start_index;
+        while i < content.len() {
+            if content[i] == self.syntax_elements.assignment_symbols["begin body"] {
+                current_block_counter += 1
+            }
+            else if content[i] == self.syntax_elements.assignment_symbols["end body"] {
+                current_block_counter -= 1
+            }
+
+            // if the block counter is 0, you reached the end so set the result
+            if current_block_counter == 0 {
+                end_of_block_index = Some(i);
+                break
+            }
+
+            i+=1
+        }
+
+        // If the end of the block was found, return it
+        // Otherwise, return an error
+        match end_of_block_index {
+            Some(index) => { return Ok(index) }
+            None        => { return Err(TokenizerError::CouldNotFindEndOfBlock) }
+        }
+    }
+
+    fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: &Vec<String>) -> Result<Token, TokenizerError> {
+        // Get necessary characters
+        let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
+            .unwrap();
+
+        // Get the indexes of the necessary characters
+        let block_start_index = conditional_statement.find(block_start_char).unwrap();
+
+        // Get the conditional statement block and given condition slice
+        let inline_block_slice = conditional_statement[block_start_index+1..].to_vec();
+        let condition_slice = conditional_statement[1..=block_start_index-1].to_vec();
+
+        // Parse the condition into an Assignment and make sure it's a CMP or BOOL
+        let condition = Assignment::from_string_vec(&self, &parent.variable_history, condition_slice);
+        match condition {
+            Assignment::CMP(_,_,_) | Assignment::BOOL(_) => {}
+            _ => { return Err(TokenizerError::IncorrectAssignmentForConditionalCondition) }
+        }
+
+        // Construct the function
+        let mut conditional_statement = ConditionalStatement {
+            parent: parent.clone(),
+            condition,
+            functionality: Vec::new(),
+        };
+
+        // Define the function's functionality
+        let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
+        conditional_statement.functionality = inline_block;
+
+        // Return it
+        return Ok(Token::ConditionalStatement(conditional_statement))
+    }
+
     fn parse_reassignment(&self, variable_history: &VariableHistory, reassignment: Vec<String>) -> Token {
         // Get the necessary characters
-        let equals_char   = self.syntax_elements.assignment_symbols.get("equals").unwrap();
+        let equals_char = self.syntax_elements.assignment_symbols.get("equals").unwrap();
 
         // Parse the declaration
         let equal_sign_index = reassignment.find(equals_char).unwrap();

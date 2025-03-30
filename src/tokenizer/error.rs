@@ -15,4 +15,10 @@ pub enum TokenizerError {
     CouldNotParseMathOperator,
     #[error("Operator could not parse this comparison operator")]
     CouldNotParseComparisonOperator,
+    #[error("Tokenizer could not find the end of this block.
+             Ensure you properly ended this block or didn't forget any miscellanious end block characters")]
+    CouldNotFindEndOfBlock,
+    #[error("A non-condition assignment was used to construct this conditional statement\n
+             Ensure you used a conditional statement or a tof value")]
+    IncorrectAssignmentForConditionalCondition
 }
