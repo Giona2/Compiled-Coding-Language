@@ -4,7 +4,6 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 #[allow(dead_code)]
 pub mod structures;
-    use reassignment::Reassignment;
     use structures::{FunctionHistory, Variable, VariableHistory};
 
 #[allow(dead_code)]
@@ -29,16 +28,22 @@ pub mod error;
 
 #[allow(dead_code)]
 pub mod reassignment;
+    use reassignment::Reassignment;
+
+#[allow(dead_code)]
+pub mod conditional_statement;
+    use conditional_statement::ConditionalStatement;
 
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub enum Token {
-    FUNCTION(Function),
-    TERMINATINGLOOP(TerminatingLoop),
-    DECLARATION(Declaration),
-    REASSIGNMENT(Reassignment),
-    RETURN(Return),
+    Function(Function),
+    TerminatingLoop(TerminatingLoop),
+    ConditionalStatement(ConditionalStatement),
+    Declaration(Declaration),
+    Reassignment(Reassignment),
+    Return(Return),
 }
 
 
@@ -123,7 +128,7 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_function(declaration_to_evaluate);
-                    if let Token::FUNCTION(function) = created_token.clone() {
+                    if let Token::Function(function) = created_token.clone() {
                         self.function_history.add_function(function);
                     }
                     result.push(created_token);
@@ -186,7 +191,7 @@ pub struct Tokenizer {
             new_assignment,
         };
 
-        return Token::REASSIGNMENT(reassignment_token)
+        return Token::Reassignment(reassignment_token)
     }
 
     fn parse_variable(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
@@ -224,7 +229,7 @@ pub struct Tokenizer {
             value: assignment,
         };
 
-        return Token::DECLARATION(declaration)
+        return Token::Declaration(declaration)
     }
 
     /*
@@ -313,7 +318,7 @@ pub struct Tokenizer {
         function.functionaliy = inline_block;
 
         // Return it
-        return Token::FUNCTION(function)
+        return Token::Function(function)
     }
 
     fn parse_return(&self, parent: &Function, return_statement: Vec<String>) -> Token {
@@ -327,6 +332,6 @@ pub struct Tokenizer {
             assignment,
         };
 
-        return Token::RETURN(return_token)
+        return Token::Return(return_token)
     }
 }

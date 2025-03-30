@@ -67,10 +67,13 @@ pub struct SyntaxElements {
         ].to_string_hashmap(),
 
         declaration_names: hashmap![
-            "variable"     => "decl",
-            "function"     => "subroutine",
-            "return"       => "expose",
-            "reassignment" => "chng",
+            "variable"                      => "decl",
+            "function"                      => "subroutine",
+            "return"                        => "expose",
+            "reassignment"                  => "chng",
+            "if conditional statement"      => "given",
+            "else if conditional statement" => "otherwise_given",
+            "else conditional statement"    => "otherwise",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![
