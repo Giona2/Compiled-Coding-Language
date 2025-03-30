@@ -44,29 +44,39 @@ pub enum MathOperator {
 
 #[derive(Debug, Clone)]
 pub enum ComparisonOperator {
+    /// Equal To
+    EQ,
+    /// Not Equal To
+    NEQ,
     /// Greater Than
     GT,
     /// Less Than
     LT,
     /// Greater Than or Equal to
-    GE,
+    GEQ,
     /// Less Than or Equal to
-    LE,
+    LEQ,
 } impl ComparisonOperator {
     pub fn from_string(from: &str) -> Result<Self, TokenizerError> {
         let syntax_elements = SyntaxElements::init();
         match from {
+            val if val == syntax_elements.comparision_symbols["equal to"] => {
+                return Ok(Self::EQ)
+            }
+            val if val == syntax_elements.comparision_symbols["not equal to"] => {
+                return Ok(Self::NEQ)
+            }
             val if val == syntax_elements.comparision_symbols["greater than"] => {
                 return Ok(Self::GT)
             }
             val if val == syntax_elements.comparision_symbols["greater than or equal to"] => {
-                return Ok(Self::GE)
+                return Ok(Self::GEQ)
             }
             val if val == syntax_elements.comparision_symbols["less than"] => {
                 return Ok(Self::LT)
             }
             val if val == syntax_elements.comparision_symbols["less than or equal to"] => {
-                return Ok(Self::LE)
+                return Ok(Self::LEQ)
             }
             _ => {
                 return Err(TokenizerError::CouldNotParseComparisonOperator)
@@ -142,7 +152,7 @@ macro_rules! feq {
 #[derive(Debug, Clone)]
 pub enum Assignment {
     EVAL(Box<Assignment>, MathOperator, Box<Assignment>),
-    CMP(usize, Box<Assignment>, ComparisonOperator, Box<Assignment>),
+    CMP(Box<Assignment>, ComparisonOperator, Box<Assignment>),
     FUNC(String, DataType, Vec<Assignment>),
     BOOL(i64),
     VAR(usize),

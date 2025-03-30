@@ -93,6 +93,8 @@ pub struct SyntaxElements {
         ].to_string_hashmap(), 
 
         comparision_symbols: hashmap![
+            "equal to"                 => "==",
+            "not equal to"             => "!=",
             "greater than"             => ">",
             "greater than or equal to" => ">=",
             "less than"                => "<",

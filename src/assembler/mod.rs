@@ -16,6 +16,7 @@ pub mod types_translator;
 #[allow(dead_code)]
 pub mod data;
     use data::FUNCTION_ARGUMENT_REGISTERS;
+    use data::core_utils;
 
 
 pub struct Assembler {
@@ -40,9 +41,7 @@ impl Assembler {
         ].iter().map(|x| x.to_string()).collect();
 
         // Write the basic utilities
-        program_instructions.append(&mut vec![
-            format!("")
-        ]);
+        program_instructions.append(&mut core_utils::get_all());
 
         // Iterate over each token and translate it accordingly
         for token in token_tree.iter() { match token {

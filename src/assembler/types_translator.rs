@@ -1,6 +1,6 @@
 use crate::data::SyntaxElements;
 use crate::tokenizer::declaration::DataType;
-use crate::tokenizer::enumerators::{Assignment, MathOperator};
+use crate::tokenizer::enumerators::{Assignment, ComparisonOperator, MathOperator};
 use crate::tokenizer::structures::VariableHistory;
 use crate::type_traits::integer::I64Extra;
 use crate::type_traits::float::F64Extra;
@@ -126,17 +126,44 @@ impl AssignmentToAssembly for Assignment {
             // Get the value of the first term and put it in rax
             returned_instructions.append_immut(&first_term);
             returned_instructions.append(&mut vec![
-                format!("  mov rax, rdi")
+                format!("  push rdi"),
             ]);
 
             // Get the value of the second term and put it in rdi
             returned_instructions.append_immut(&second_term);
-
-            // Append 
             returned_instructions.append(&mut vec![
-                format!("  cmp rax, rdi"),
+                format!("  mov rsi, rdi"),
+                format!("  pop rdi"),
             ]);
 
+            // Run it through the associated cmp_ function to determine the result
+            match operator {
+                ComparisonOperator::EQ  => {returned_instructions.append(&mut vec![
+                    format!("  call cmp_eq")
+                ])}
+                ComparisonOperator::NEQ => {returned_instructions.append(&mut vec![
+                    format!("  call cmp_neq")
+                ])}
+                ComparisonOperator::GT  => {returned_instructions.append(&mut vec![
+                    format!("  call cmp_gt")
+                ])}
+                ComparisonOperator::GEQ => {returned_instructions.append(&mut vec![
+                    format!("  call cmp_geq")
+                ])}
+                ComparisonOperator::LT  => {returned_instructions.append(&mut vec![
+                    format!("  call cmp_lt")
+                ])}
+                ComparisonOperator::LEQ => {returned_instructions.append(&mut vec![
+                    format!("  call cmp_leq")
+                ])}
+            }
+
+            // Put the result into rdi
+            returned_instructions.append(&mut vec![
+                format!("  mov rdi, rax"),
+            ]);
+
+            // Return the final result
             return Ok(returned_instructions)
         }
 
