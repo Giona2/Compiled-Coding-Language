@@ -11,4 +11,7 @@ pub enum AssemblerError {
     #[error("The assignment you are trying to convert to an assembly instruction is not a valid branch.
              Ensure you are using either an Assignment::INTEGER or Assignment::FLOAT branch")]
     IncorrectAssignmentAttemptedToConvert,
+    #[error("This evaluation could not be parsed.
+             Ensure you are using a numerical value in the evaluation")]
+    CouldNotParseEvaluation
 }

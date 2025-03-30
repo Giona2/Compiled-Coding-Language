@@ -63,7 +63,7 @@ pub struct SyntaxElements {
             "integer"   => "int",
             "float"     => "flt",
             "character" => "chr",
-            "boolean"   => "bol",
+            "boolean"   => "tof",
         ].to_string_hashmap(),
 
         declaration_names: hashmap![

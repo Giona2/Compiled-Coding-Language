@@ -39,6 +39,11 @@ impl Assembler {
             "",
         ].iter().map(|x| x.to_string()).collect();
 
+        // Write the basic utilities
+        program_instructions.append(&mut vec![
+            format!("")
+        ]);
+
         // Iterate over each token and translate it accordingly
         for token in token_tree.iter() { match token {
             Token::FUNCTION(function) => program_instructions.append(&mut self.assemble_function(function)),
@@ -118,7 +123,7 @@ impl Assembler {
             vec![
                 format!("  sub rsp, {}", stack_memory.step),
             ],
-            assignment_instructions,
+            assignment_instructions.unwrap(),
             vec![
                 format!("  mov rax, rdi"),
                 format!("  mov QWORD [rbp-{}], rax", (declaration.location+1) * stack_memory.step),
@@ -133,7 +138,7 @@ impl Assembler {
         let variable_location = variable_history.find_variable(&reassignment.name).unwrap();
 
         let appended_instructions: Vec<String> = vec![
-            assignment_instructions,
+            assignment_instructions.unwrap(),
             vec![
                 format!("  mov rax, rdi"),
                 format!("  mov QWORD [rbp-{}], rax", (variable_location+1) * variable_history.step),
@@ -143,7 +148,8 @@ impl Assembler {
     }
 
     fn assemble_return(&self, variable_history: &VariableHistory, return_statement: &Return) -> Vec<String> {
-        let mut assignment_instructions = return_statement.assignment.to_assembly_instructions(variable_history);
+        let mut assignment_instructions = return_statement.assignment.to_assembly_instructions(variable_history)
+            .unwrap();
 
         assignment_instructions.append(&mut vec![
             format!("  mov rax, rdi")

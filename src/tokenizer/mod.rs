@@ -1,5 +1,4 @@
 use crate::type_traits::vector::VecExtra;
-use crate::type_traits::hashmap::{HashMapExtra, StringStringHashMapExtra};
 use crate::data::{SyntaxElements, MEMORY_STEP};
 
 

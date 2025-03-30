@@ -1,5 +1,6 @@
+use crate::data::SyntaxElements;
 use crate::tokenizer::declaration::DataType;
-use crate::tokenizer::enumerators::{Assignment, Operator};
+use crate::tokenizer::enumerators::{Assignment, MathOperator};
 use crate::tokenizer::structures::VariableHistory;
 use crate::type_traits::integer::I64Extra;
 use crate::type_traits::float::F64Extra;
@@ -17,7 +18,7 @@ pub trait AssignmentToAssembly {
     ///
     /// Note that the rax register is reserved for performing arithmetic with the result of this
     /// function
-    fn to_assembly_instructions(&self, variable_history: &VariableHistory) -> Vec<String>;
+    fn to_assembly_instructions(&self, variable_history: &VariableHistory) -> Result<Vec<String>, AssemblerError>;
 
     /// Converts either `Self::INTEGER` or `Self::FLOAT` to its acocciated assembly value
     ///
@@ -26,14 +27,14 @@ pub trait AssignmentToAssembly {
 }
 
 impl AssignmentToAssembly for Assignment {
-    fn to_assembly_instructions(&self, variable_history: &VariableHistory) -> Vec<String> { match self {
+    fn to_assembly_instructions(&self, variable_history: &VariableHistory) -> Result<Vec<String>, AssemblerError> { match self {
         Self::EVAL(first_term_assignment, operation, second_term_assignment) => {
             // Initalize return variable
             let mut returned_instructions: Vec<String> = Vec::new();
 
             // Get the assembly instructions of the first and second terms
-            let first_term  = first_term_assignment.to_assembly_instructions(variable_history);
-            let second_term = second_term_assignment.to_assembly_instructions(variable_history);
+            let first_term  = first_term_assignment.to_assembly_instructions(variable_history).unwrap();
+            let second_term = second_term_assignment.to_assembly_instructions(variable_history).unwrap();
 
             // Append the first term assembly instructions and suffix it by storing the resulting
             // value into the accociated register for processing 
@@ -45,6 +46,9 @@ impl AssignmentToAssembly for Assignment {
                 DataType::FLOAT => { returned_instructions.append(&mut vec![
                     format!("  movq xmm0, rdi")
                 ]);}
+                _ => {
+                    return Err(AssemblerError::CouldNotParseEvaluation)
+                }
             }
             
             // Append the second term assembly instructions and suffix it by storing the resulting
@@ -55,39 +59,45 @@ impl AssignmentToAssembly for Assignment {
                 DataType::FLOAT => { returned_instructions.append(&mut vec![
                     format!("  movq xmm1, rdi")
                 ]);}
+                _ => {
+                    return Err(AssemblerError::CouldNotParseEvaluation)
+                }
             }
 
             // Perform the math operation
             let type_of_self = self.evaluate_type(variable_history);
             match type_of_self {
                 DataType::INTEGER => { match operation {
-                    Operator::ADD => { returned_instructions.append(&mut vec![
+                    MathOperator::ADD => { returned_instructions.append(&mut vec![
                         format!("  add rax, rdi")
                     ]);}
-                    Operator::SUB => { returned_instructions.append(&mut vec![
+                    MathOperator::SUB => { returned_instructions.append(&mut vec![
                         format!("  sub rax, rdi")
                     ]);}
-                    Operator::MUL => { returned_instructions.append(&mut vec![
+                    MathOperator::MUL => { returned_instructions.append(&mut vec![
                         format!("  imul rax, rdi")
                     ]);}
-                    Operator::DIV => {
+                    MathOperator::DIV => {
                         panic!("Division not yet implemented")
                     }
                 }}
                 DataType::FLOAT => { match operation {
-                    Operator::ADD => { returned_instructions.append(&mut vec![
+                    MathOperator::ADD => { returned_instructions.append(&mut vec![
                         format!("  addsd xmm0, xmm1")
                     ]);}
-                    Operator::SUB => { returned_instructions.append(&mut vec![
+                    MathOperator::SUB => { returned_instructions.append(&mut vec![
                         format!("  subsd xmm0, xmm1")
                     ]);}
-                    Operator::MUL => { returned_instructions.append(&mut vec![
+                    MathOperator::MUL => { returned_instructions.append(&mut vec![
                         format!("  mulsd xmm0, xmm1")
                     ]);}
-                    Operator::DIV => { returned_instructions.append(&mut vec![
+                    MathOperator::DIV => { returned_instructions.append(&mut vec![
                         format!("  divsd xmm0, xmm1")
                     ]);}
                 }}
+                _ => {
+                    return Err(AssemblerError::CouldNotParseEvaluation)
+                }
             }
 
             // Prefix the math equation by storing the result into the rdi register
@@ -98,10 +108,36 @@ impl AssignmentToAssembly for Assignment {
                 DataType::FLOAT => { returned_instructions.append(&mut vec![
                     format!("  movq rdi, xmm0")
                 ]);}
+                _ => {
+                    return Err(AssemblerError::CouldNotParseEvaluation)
+                }
             }
 
             // Return it
-            return returned_instructions
+            return Ok(returned_instructions)
+        }
+
+        Self::CMP(first_term_assignment, operator, second_term_assignment) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
+
+            let first_term = first_term_assignment.to_assembly_instructions(variable_history).unwrap();
+            let second_term = second_term_assignment.to_assembly_instructions(variable_history).unwrap();
+
+            // Get the value of the first term and put it in rax
+            returned_instructions.append_immut(&first_term);
+            returned_instructions.append(&mut vec![
+                format!("  mov rax, rdi")
+            ]);
+
+            // Get the value of the second term and put it in rdi
+            returned_instructions.append_immut(&second_term);
+
+            // Append 
+            returned_instructions.append(&mut vec![
+                format!("  cmp rax, rdi"),
+            ]);
+
+            return Ok(returned_instructions)
         }
 
         Self::INTEGER(returned_number) => {
@@ -111,7 +147,7 @@ impl AssignmentToAssembly for Assignment {
                 format!("  mov rdi, {}", returned_number.to_assembly_value()),
             ]);
 
-            return returned_instructions
+            return Ok(returned_instructions)
         }
 
         Self::FLOAT(returned_number) => {
@@ -121,7 +157,7 @@ impl AssignmentToAssembly for Assignment {
                 format!("  mov rdi, {}", returned_number.to_assembly_value()),
             ]);
 
-            return returned_instructions
+            return Ok(returned_instructions)
         }
 
         Self::FUNC(function_name, _, function_args) => {
@@ -138,7 +174,7 @@ impl AssignmentToAssembly for Assignment {
                 format!("  mov rdi, rax")
             ]);
 
-            return returned_instructions;
+            return Ok(returned_instructions);
         }
 
         Self::VAR(variable_index) => {
@@ -148,7 +184,17 @@ impl AssignmentToAssembly for Assignment {
                 format!("  mov rdi, QWORD [rbp-{}]", variable_history.step * (variable_index+1)),
             ]);
 
-            return returned_instructions
+            return Ok(returned_instructions)
+        }
+
+        Self::BOOL(boolean_val) => {
+            let mut returned_instructions: Vec<String> = Vec::new();
+
+            returned_instructions.append(&mut vec![
+                format!("  mov rdi, {}", boolean_val.to_assembly_value()),
+            ]);
+
+            return Ok(returned_instructions)
         }
     }}
 

@@ -142,18 +142,15 @@ macro_rules! feq {
 #[derive(Debug, Clone)]
 pub enum Assignment {
     EVAL(Box<Assignment>, MathOperator, Box<Assignment>),
-    CMP(Box<Assignment>, ComparisonOperator, Box<Assignment>),
+    CMP(usize, Box<Assignment>, ComparisonOperator, Box<Assignment>),
     FUNC(String, DataType, Vec<Assignment>),
-    BOOL(i8),
+    BOOL(i64),
     VAR(usize),
     INTEGER(i64),
     FLOAT(f64),
 } impl Assignment {
     /// Parses a string vector (an equation) into an Assignment
     pub fn from_string_vec(tokenizer: &Tokenizer, variable_history: &VariableHistory, string_equation: Vec<String>) -> Self {
-        println!("Assignment::from_string_vec()");
-        println!("  |- recieved: {string_equation:?}");
-
         let syntax_elements = SyntaxElements::init();
 
         let operator_symbols = syntax_elements.get_all_operator_symbols();
