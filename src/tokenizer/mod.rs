@@ -122,9 +122,27 @@ pub struct Tokenizer {
 
                 val if val == self.syntax_elements.declaration_names.get("if conditional statement").unwrap() => { if let Some(parent) = parent_ref {
                     // Find the declaration_stop
-                    let block_start_char = self.syntax_elements.assignment_symbols.get("begin body").unwrap();
-                    let block_start_index = content_to_tokenize.find_after_index(i, block_start_char).unwrap();
-                    let declaration_stop_index = self.find_end_of_block(&content_to_tokenize, block_start_index).unwrap();
+                    fn find_full_declaration(_self: &mut Tokenizer, current_index: usize, content_to_tokenize: &Vec<String>) -> usize {
+                        // get necessary characters
+                        let else_if_statement_char = _self.syntax_elements.declaration_names["else if conditional statement"].clone();
+                        let else_statement_char    = _self.syntax_elements.declaration_names["else conditional statement"].clone();
+                        let block_start_char       = _self.syntax_elements.assignment_symbols["begin body"].clone();
+
+                        // get the indexes of the beginning and end of the associated block
+                        let block_start_index = content_to_tokenize.find_after_index(current_index, &block_start_char).unwrap();
+                        let block_stop_index = _self.find_end_of_block(&content_to_tokenize, block_start_index).unwrap();
+
+                        let next_statement_is_else_if = content_to_tokenize[block_stop_index+1] == else_if_statement_char;
+                        let next_statement_is_else = content_to_tokenize[block_stop_index+1] == else_statement_char;
+                        if next_statement_is_else || next_statement_is_else_if { 
+                            let next_block_start_index = content_to_tokenize.find_after_index(block_stop_index, &block_start_char);
+                            return find_full_declaration(_self, next_block_start_index.unwrap(), content_to_tokenize);
+                        }
+                        else {
+                            return block_stop_index
+                        }
+                    }
+                    let declaration_stop_index = find_full_declaration(self, i, content_to_tokenize);
 
                     // Get the slice from this index (the declaration start) to the
                     // block char (the declaration end)
@@ -234,39 +252,75 @@ pub struct Tokenizer {
         }
     }
 
-    fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: &Vec<String>) -> Result<Token, TokenizerError> {
+    fn parse_conditional_statement(&mut self, parent: &mut Function, variable_history: &VariableHistory, conditional_statement: &Vec<String>) -> Result<Token, TokenizerError> {
         println!("coding_language::tokenizer::Tokenizer::parse_conditional_statement()");
         println!("  recieved: {conditional_statement:?}");
 
         // Get necessary characters
-        let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
-            .unwrap();
+        let block_start_char       = self.syntax_elements.assignment_symbols["begin body"].clone();
+        let block_stop_char        = self.syntax_elements.assignment_symbols["end body"].clone();
+        let else_if_statement_char = self.syntax_elements.declaration_names["else if conditional statement"].clone();
+        let else_statement_char    = self.syntax_elements.declaration_names["else conditional statement"].clone();
 
-        // Get the indexes of the necessary characters
-        let block_start_index = conditional_statement.find(block_start_char).unwrap();
+        /*
+        // Get the array of conditions
+        fn get_condition_fields(_self: &Tokenizer, current_index: usize, statement: &Vec<String>) -> Vec<(Option<Assignment>, Vec<Token>)> {
+            // get necessary characters
+            let block_start_char = _self.syntax_elements.assignment_symbols["begin body"].clone();
+            let block_stop_char  = _self.syntax_elements.assignment_symbols["end body"].clone();
+            let else_if_statement_char = _self.syntax_elements.declaration_names["else if conditional statement"].clone();
+            let else_statement_char    = _self.syntax_elements.declaration_names["else conditional statement"].clone();
 
-        // Get the conditional statement block and given condition slice
-        let inline_block_slice = conditional_statement[block_start_index+1..].to_vec();
-        let condition_slice = conditional_statement[1..=block_start_index-1].to_vec();
+            // get the location of the start and stop of the block
+            let block_start_index = statement.find_after_index(current_index, &block_start_char).unwrap();
+            let block_stop_index = _self.find_end_of_block(&statement, block_start_index).unwrap();
 
-        // Parse the condition into an Assignment and make sure it's a CMP or BOOL
-        let condition = Assignment::from_string_vec(&self, &parent.variable_history, condition_slice);
-        match condition {
-            Assignment::CMP(_,_,_) | Assignment::BOOL(_) => {}
-            _ => { return Err(TokenizerError::IncorrectAssignmentForConditionalCondition) }
+            let next_statement_is_else_if = statement[block_stop_index+1] == else_if_statement_char;
+            let next_statement_is_else = statement[block_stop_index+1] == else_statement_char;
+            if next_statement_is_else_if {
+
+            }
+        }
+        let condition_fields = get_condition_fields(self, 0, &conditional_statement);
+        */
+
+        let mut condition_fields: Vec<(Option<Assignment>, Vec<Token>)> = Vec::new();
+        let mut i = 0;
+        let mut is_last_field = false;
+        while i < conditional_statement.len() {
+            // get the location of the start and stop of the block
+            let block_start_index = conditional_statement.find_after_index(i, &block_start_char).unwrap();
+            let block_stop_index = self.find_end_of_block(&conditional_statement, block_start_index).unwrap();
+
+            let next_statement_is_else_if = conditional_statement[block_stop_index+1] == else_if_statement_char;
+            let next_statement_is_else = conditional_statement[block_stop_index+1] == else_statement_char;
+            if next_statement_is_else_if || next_statement_is_else {
+                let mut condition: Option<Assignment> = None;
+
+                let condition_slice = conditional_statement[i+1..=block_start_index-1].to_owned();
+                if condition_slice.len() > 0 {
+                    condition = Some(Assignment::from_string_vec(self, variable_history, condition_slice));
+                }
+
+                let functionality_slice = conditional_statement[block_start_index+1..block_stop_index-1].to_owned();
+                let functionality = self.generate_token_tree(&mut Some(parent), &functionality_slice);
+
+                condition_fields.push((condition, functionality));
+
+                if is_last_field { break; }
+
+                i = block_stop_index + 1;
+                if next_statement_is_else { is_last_field = true; }
+                continue;
+            }
         }
 
         // Construct the function
-        let mut conditional_statement = ConditionalStatement {
+        let conditional_statement = ConditionalStatement {
+            condition_fields,
             parent: parent.clone(),
             index: self.number_of_conditional_statements,
-            condition,
-            functionality: Vec::new(),
         };
-
-        // Define the function's functionality
-        let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
-        conditional_statement.functionality = inline_block;
 
         // Return it
         return Ok(Token::ConditionalStatement(conditional_statement))
