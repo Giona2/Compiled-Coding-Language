@@ -167,6 +167,7 @@ impl AssignmentToAssembly for Assignment {
             return Ok(returned_instructions)
         }
 
+        /*
         Self::INTEGER(returned_number) => {
             let mut returned_instructions: Vec<String> = Vec::new();
 
@@ -186,6 +187,7 @@ impl AssignmentToAssembly for Assignment {
 
             return Ok(returned_instructions)
         }
+        */
 
         Self::FUNC(function_name, _, function_args) => {
             let mut returned_instructions: Vec<String> = Vec::new();
@@ -204,6 +206,7 @@ impl AssignmentToAssembly for Assignment {
             return Ok(returned_instructions);
         }
 
+        /*
         Self::VAR(variable_index) => {
             let mut returned_instructions: Vec<String> = Vec::new();
 
@@ -223,6 +226,7 @@ impl AssignmentToAssembly for Assignment {
 
             return Ok(returned_instructions)
         }
+        */
     }}
 
     fn to_assembly_value(&self) -> Result<String, AssemblerError> { match self {
