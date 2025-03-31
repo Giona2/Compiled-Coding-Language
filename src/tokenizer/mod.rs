@@ -51,6 +51,7 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
+    number_of_conditional_statements: usize,
     function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
@@ -58,6 +59,7 @@ pub struct Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
+        number_of_conditional_statements: 0,
         function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
@@ -130,6 +132,7 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_conditional_statement(parent, &declaration_to_evaluate).unwrap();
+                    self.number_of_conditional_statements += 1;
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -256,6 +259,7 @@ pub struct Tokenizer {
         // Construct the function
         let mut conditional_statement = ConditionalStatement {
             parent: parent.clone(),
+            index: self.number_of_conditional_statements,
             condition,
             functionality: Vec::new(),
         };
