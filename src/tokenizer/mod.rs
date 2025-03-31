@@ -109,6 +109,7 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_reassignment(&parent.variable_history, declaration_to_evaluate);
+                    println!("  reassignment: {created_token:?}");
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
