@@ -86,9 +86,12 @@ impl Assembler {
             }
             Token::Return(return_statement) => {
                 function_instructions.append(&mut self.assemble_return(&function.variable_history, return_statement));
-            } Token::ConditionalStatement(conditional_statement) => {
+            }
+/*
+            Token::ConditionalStatement(conditional_statement) => {
                 function_instructions.append(&mut self.assemble_conditional_statement(&function.variable_history, conditional_statement));
             }
+*/
             _ => {}
         }}
 
@@ -118,6 +121,7 @@ impl Assembler {
         return function_instructions
     }
 
+/*
     fn assemble_conditional_statement(&self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Vec<String> {
         let mut appended_instructions: Vec<String> = Vec::new();
 
@@ -138,9 +142,10 @@ impl Assembler {
 
         return appended_instructions
     }
+*/
 
     fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> {
-        let assignment_instructions = declaration.value.clone().to_assembly_instructions(stack_memory);
+        let assignment_instructions = declaration.value.clone().to_assembly_instructions("rdi", stack_memory);
         let appended_instructions: Vec<String> = vec![
             vec![
                 format!("  sub rsp, {}", stack_memory.step),
@@ -155,7 +160,7 @@ impl Assembler {
     }
 
     fn assemble_reassignment(&self, variable_history: &VariableHistory, reassignment: &Reassignment) -> Vec<String> {
-        let assignment_instructions = reassignment.new_assignment.clone().to_assembly_instructions(variable_history);
+        let assignment_instructions = reassignment.new_assignment.clone().to_assembly_instructions("rdi", variable_history);
 
         let variable_location = variable_history.find_variable(&reassignment.name).unwrap();
 
@@ -170,7 +175,7 @@ impl Assembler {
     }
 
     fn assemble_return(&self, variable_history: &VariableHistory, return_statement: &Return) -> Vec<String> {
-        let mut assignment_instructions = return_statement.assignment.to_assembly_instructions(variable_history)
+        let mut assignment_instructions = return_statement.assignment.to_assembly_instructions("rdi", variable_history)
             .unwrap();
 
         assignment_instructions.append(&mut vec![

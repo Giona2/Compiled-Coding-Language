@@ -1,12 +1,8 @@
-use std::error::Error;
-
-use crate::data::SyntaxElements;
 use crate::tokenizer::declaration::DataType;
 use crate::tokenizer::enumerators::{Assignment, ComparisonOperator, MathOperator};
 use crate::tokenizer::structures::VariableHistory;
 use crate::type_traits::integer::I64Extra;
 use crate::type_traits::float::F64Extra;
-use crate::type_traits::vector::VecExtra;
 
 use super::data::FUNCTION_ARGUMENT_REGISTERS;
 use super::error::AssemblerError;
