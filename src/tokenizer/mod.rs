@@ -121,17 +121,6 @@ pub struct Tokenizer {
                     continue;
                 }}
 
-                val if val == self.syntax_elements.declaration_names.get("conditional statement").unwrap() => { if let Some(parent) = parent_ref {
-                    let block_start_char = self.syntax_elements.assignment_symbols["start body"].clone();
-                    
-                    let block_start_index = self.find_end_of_block(content_to_tokenize, i);
-
-                    // Move the current word to one word after the end of this declaration and
-                    // continue the loop
-                    i = declaration_stop_index;
-                    continue;
-                }}
-
                 val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
@@ -223,9 +212,6 @@ pub struct Tokenizer {
             Some(index) => { return Ok(index) }
             None        => { return Err(TokenizerError::CouldNotFindEndOfBlock) }
         }
-    }
-
-    fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: &Vec<String>) -> Result<Token, TokenizerError> {
     }
 
     fn parse_reassignment(&self, variable_history: &VariableHistory, reassignment: Vec<String>) -> Token {

@@ -13,5 +13,11 @@ pub enum AssemblerError {
     IncorrectAssignmentAttemptedToConvert,
     #[error("This evaluation could not be parsed.
              Ensure you are using a numerical value in the evaluation")]
-    CouldNotParseEvaluation
+    CouldNotParseEvaluation,
+    #[error("The Assembler's types_translator was misused\n
+             Ensure you are only using this with complex Assignments")]
+    ImproperUseOfTypesTranslator,
+    #[error("An assignment was incorrectly formatted\n
+             This is most commonly caused by mixing value types in equations")]
+    IncorrectAssignmentFormatting,
 }
