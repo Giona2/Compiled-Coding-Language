@@ -51,7 +51,6 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
-    number_of_conditional_statements: usize,
     function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
@@ -59,7 +58,6 @@ pub struct Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
-        number_of_conditional_statements: 0,
         function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
@@ -287,39 +285,6 @@ pub struct Tokenizer {
 
         return Token::Declaration(declaration)
     }
-
-    /*
-    fn parse_float(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
-        // Parse the declaration
-        let equal_sign_index = declaration.find(&"=".to_owned()).unwrap();
- 
-        // Get the assignment part (everything after equals and before `;`)
-        let string_assignment = declaration[equal_sign_index+1..declaration.len()].to_vec();
- 
-        // Retrieve the name of te variable, its data_type, and what it's assigned to
-        let name = declaration[1].clone();
-        let data_type = DataType::check_token_type(&declaration[0]).unwrap();
-        let assignment = Assignment::from_string_vec(&self, variable_history, string_assignment);
-
-        // Add it to representation variable_history
-        let variable_representation = Variable {
-            name: name.clone(),
-            data_type: data_type.clone(),
-        };
-        variable_history.add_variable(variable_representation)
-            .expect("variable_history does not conclude with None");
- 
-        // Build the declaration token
-        let declaration = Declaration {
-            name: name.clone(),
-            location: variable_history.find_variable(&name).unwrap(),
-            data_type,
-            value: Some(assignment),
-        };
- 
-        return Token::DECLARATION(declaration)
-    }
-    */
 
     fn parse_function(&mut self, declaration: Vec<String>) -> Token {
         println!("coding_language::tokenizer::Tokenizer::parse_function()");
