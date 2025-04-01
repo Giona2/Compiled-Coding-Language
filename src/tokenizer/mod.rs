@@ -71,6 +71,8 @@ pub struct Tokenizer {
     }
 
     pub fn generate_token_tree(&mut self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
+        println!("coding_language::tokenizer::Tokenizer::generate_token_tree()");
+
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
@@ -122,6 +124,8 @@ pub struct Tokenizer {
                 }}
 
                 val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
+                    println!("  found function");
+                    println!("  parsing: {:?}", content_to_tokenize[i..].to_owned());
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
                     let block_start_char = self.syntax_elements.assignment_symbols.get("begin body").unwrap();
@@ -181,6 +185,7 @@ pub struct Tokenizer {
     ///
     /// Note that you should place the start_index at the beginning of the block
     fn find_end_of_block(&self, content: &[String], start_index: usize) -> Result<usize, TokenizerError> {
+        println!("coding_language::tokenizer::Tokenizer::find_end_of_block()");
         // Keep track of the end_of_block_index
         let mut end_of_block_index: Option<usize> = None;
 
@@ -190,6 +195,8 @@ pub struct Tokenizer {
         // Iterate through each character
         let mut i = start_index;
         while i < content.len() {
+            println!("  current char: {}", content[i]);
+            println!("  block counter: {}", current_block_counter);
             if content[i] == self.syntax_elements.assignment_symbols["begin body"] {
                 current_block_counter += 1
             }

@@ -236,7 +236,6 @@ pub enum Assignment {
     fn from_equation_term(tokenizer: &Tokenizer, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
         println!("coding_language::tokenizer::enumerators::Assignment::from_equation_term()");
         println!("  recieved: {term:?}");
-        println!("  tokenizer functions = {:?}", tokenizer.function_history);
 
         let syntax_elements = SyntaxElements::init();
 
