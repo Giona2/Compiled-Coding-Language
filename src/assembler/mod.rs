@@ -1,8 +1,12 @@
 use std::vec;
 
-use crate::{tokenizer::{
-    conditional_statement::ConditionalStatement, declaration::Declaration, enumerators::Assignment, function::{Function, Return}, reassignment::Reassignment, structures::VariableHistory, Token
-}, type_traits::vector::{StrVecExtra, VecExtra}};
+use crate::tokenizer::{
+    declaration::Declaration,
+    function::{Function, Return},
+    reassignment::Reassignment,
+    structures::VariableHistory,
+    Token
+};
 
 
 #[allow(dead_code)]
