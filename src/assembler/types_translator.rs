@@ -190,8 +190,6 @@ impl AssignmentToAssembly for Assignment {
 
             return Ok(returned_instructions)
         }
-
-        _ => { return Err(AssemblerError::ImproperUseOfTypesTranslator) }
     }}
 
     fn to_assembly_value(&self) -> Result<String, AssemblerError> { match self {
