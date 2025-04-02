@@ -6,6 +6,3 @@ edition = "2021"
 [dependencies]
 # error handling
 thiserror = "2.0.12"
-
-# building the source code
-nasm-rs = "0.3"
