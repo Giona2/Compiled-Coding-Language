@@ -153,6 +153,11 @@ impl AssignmentToAssembly for Assignment {
         Self::FUNC(function_name, _, function_args) => {
             let mut returned_instructions: Vec<String> = Vec::new();
 
+            // Push rax to stack if it's not the target register
+            if target_register != "rax" { returned_instructions.append(&mut vec![
+                format!("  push rax")
+            ]);}
+
             // Write the function arguments
             for (argument_index, argument) in function_args.iter().enumerate() { returned_instructions.append(&mut vec![
                 format!("  mov {}, {}", FUNCTION_ARGUMENT_REGISTERS[argument_index], argument.to_assembly_value().unwrap()),
@@ -164,8 +169,10 @@ impl AssignmentToAssembly for Assignment {
             ]);
 
             // Place the result of the function into the associated register
+            // If not rax, pop the original value of rax back
             if target_register != "rax" { returned_instructions.append(&mut vec![
-                format!("  mov {}, rax", target_register)
+                format!("  mov {}, rax", target_register),
+                format!("  pop rax"),
             ]);}
 
             return Ok(returned_instructions);
