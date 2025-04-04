@@ -79,7 +79,7 @@ pub struct Tokenizer {
 
             // Declarion handling
             match &current_word {
-                val if val == self.syntax_elements.declaration_names.get("variable").unwrap() => { if let Some(parent) = parent_ref {
+                val if *val == self.syntax_elements.declaration_names["variable"] => { if let Some(parent) = parent_ref {
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
                     let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -99,7 +99,7 @@ pub struct Tokenizer {
                     continue;
                 }}
 
-                val if val == self.syntax_elements.declaration_names.get("reassignment").unwrap() => { if let Some(parent) = parent_ref {
+                val if *val == self.syntax_elements.declaration_names["reassignment"] => { if let Some(parent) = parent_ref {
                     println!("  found reassignment\n  given: {:?}", content_to_tokenize[i..].to_owned());
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
@@ -121,7 +121,7 @@ pub struct Tokenizer {
                     continue;
                 }}
 
-                val if val == self.syntax_elements.declaration_names.get("function").unwrap() => {
+                val if *val == self.syntax_elements.declaration_names["function"] => {
                     println!("  found function");
                     println!("  parsing: {:?}", content_to_tokenize[i..].to_owned());
                     // Get the first instance of the end block character after the
@@ -147,7 +147,11 @@ pub struct Tokenizer {
                     continue;
                 }
 
-                val if val == self.syntax_elements.declaration_names.get("return").unwrap() => { if let Some(parent) = parent_ref.as_mut() {
+                val if *val == self.syntax_elements.declaration_names["conditional statement"] => { if let Some(parent) = parent_ref.as_mut() {
+
+                }}
+
+                val if *val == self.syntax_elements.declaration_names["return"] => { if let Some(parent) = parent_ref.as_mut() {
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
                     let block_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
