@@ -51,6 +51,7 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
+    conditional_statement_counter: usize,
     function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
@@ -58,6 +59,7 @@ pub struct Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
+        conditional_statement_counter: 0,
         function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
@@ -122,8 +124,6 @@ pub struct Tokenizer {
                 }}
 
                 val if *val == self.syntax_elements.declaration_names["function"] => {
-                    println!("  found function");
-                    println!("  parsing: {:?}", content_to_tokenize[i..].to_owned());
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
                     let block_start_char = self.syntax_elements.assignment_symbols.get("begin body").unwrap();
@@ -148,7 +148,23 @@ pub struct Tokenizer {
                 }
 
                 val if *val == self.syntax_elements.declaration_names["conditional statement"] => { if let Some(parent) = parent_ref.as_mut() {
+                    // Get necessary chars
+                    let block_start_char = self.syntax_elements.assignment_symbols["begin body"].clone();
 
+                    // Get the index of the chars
+                    let block_start_index = content_to_tokenize.find_after_index(i, &block_start_char).unwrap();
+
+                    // Get the index of the end of this comparison
+                    let declaration_stop_index = self.find_end_of_block(content_to_tokenize, block_start_index).unwrap();
+
+                    // Parse the slice into a token and add it to the result
+                    let created_token = self.parse_conditional_statement(parent, content_to_tokenize[i..=declaration_stop_index].to_vec());
+                    result.push(created_token);
+
+                    // Move the current word to one word after the end of this declaration and
+                    // continue the loop
+                    i = declaration_stop_index;
+                    continue;
                 }}
 
                 val if *val == self.syntax_elements.declaration_names["return"] => { if let Some(parent) = parent_ref.as_mut() {
@@ -221,6 +237,65 @@ pub struct Tokenizer {
             Some(index) => { return Ok(index) }
             None        => { return Err(TokenizerError::CouldNotFindEndOfBlock) }
         }
+    }
+
+    fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: Vec<String>) -> Token {
+        // Get necessary characters
+        let begin_comparison_conditions_char = self.syntax_elements.assignment_symbols["begin comparison conditions"].clone();
+        let end_comparison_conditions_char   = self.syntax_elements.assignment_symbols["end comparison conditions"].clone();
+        let begin_enclosure_char             = self.syntax_elements.assignment_symbols["begin enclosure"].clone();
+        let end_enclosure_char               = self.syntax_elements.assignment_symbols["end enclosure"].clone();
+        let else_comparison_statement_char   = self.syntax_elements.declaration_names["else conditional statement"].clone();
+
+        // Get active variables slice
+        let begin_comparison_conditions_index = conditional_statement.find(&begin_comparison_conditions_char).unwrap();
+        let end_comparison_conditions_index   = conditional_statement.find(&end_comparison_conditions_char  ).unwrap();
+        let comparison_conditions_slice_raw: Vec<String> = conditional_statement[begin_comparison_conditions_index+1..=end_comparison_conditions_index-1].to_vec();
+        let comparison_conditions_slice: Vec<&[String]> = comparison_conditions_slice_raw.split(|x| x==",").collect();
+
+        // Parse it by iterating over each variable passed
+        let mut active_variables: Vec<usize> = Vec::new();
+        for variable in comparison_conditions_slice.iter() {
+            let variable_location = parent.variable_history.find_variable(&variable[0]).unwrap();
+            active_variables.push(variable_location);
+        }
+
+        // Get each condition field
+        let mut condition_fields_slices: Vec<(Option<Assignment>, Vec<Token>)> = Vec::new();
+        let mut i = 0;
+        while i < conditional_statement.len() {
+            // get index of necessary chars
+            let begin_enclosure_index = conditional_statement.find_after_index(i, &begin_enclosure_char).unwrap();
+            let end_enclosure_index   = conditional_statement.find_after_index(i, &end_enclosure_char).unwrap();
+            let enclosure_slice       = conditional_statement[begin_enclosure_index+1..=end_enclosure_index-1].to_vec();
+
+            // get the condition of current field
+            let field_condition: Option<Assignment>;
+            if enclosure_slice == [else_comparison_statement_char.clone()] {
+                field_condition = None;
+            } else {
+                field_condition = Some(Assignment::from_string_vec(self, &parent.variable_history, enclosure_slice));
+            }
+
+            // get the block index and parse it
+            let block_start_index  = conditional_statement.find_after_index(i, &begin_enclosure_char).unwrap();
+            let block_end_index    = self.find_end_of_block(&conditional_statement, block_start_index).unwrap();
+            let inline_block_slice = conditional_statement[block_start_index+1..=block_end_index-1].to_owned();
+            let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
+
+            condition_fields_slices.push((field_condition, inline_block));
+
+            i = block_end_index;
+        }
+
+        self.conditional_statement_counter += 1;
+        let conditional_statement_token = ConditionalStatement {
+            index: self.conditional_statement_counter,
+            active_variables,
+            condition_fields: condition_fields_slices,
+        };
+
+        return Token::ConditionalStatement(conditional_statement_token)
     }
 
     fn parse_reassignment(&self, variable_history: &VariableHistory, reassignment: Vec<String>) -> Token {
