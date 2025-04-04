@@ -7,6 +7,6 @@ use super::Token;
 pub struct ConditionalStatement {
     pub parent: Function,
     pub index: usize,
-    pub comparison_value: Assignment,
+    pub active_variables: Vec<usize>,
     pub condition_fields: Vec<(Option<Assignment>, Vec<Token>)>,
 }
