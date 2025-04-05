@@ -20,11 +20,17 @@ pub mod data;
 
 
 pub struct Assembler {
-    pub instructions: Vec<String>
+    pub instructions: Vec<String>,
+
+    conditional_loop_counter: usize,
+    conditional_statement_counter: usize,
 }
 impl Assembler {
     pub fn init() -> Self { Self {
         instructions: Vec::new(),
+
+        conditional_loop_counter: 0,
+        conditional_statement_counter: 0,
     }}
 
     pub fn generate_instructions(&mut self, token_tree: &Vec<Token>) -> Result<(), AssemblerError> {
@@ -54,7 +60,7 @@ impl Assembler {
         return Ok(())
     }
 
-    fn assemble_function(&self, function: &Function) -> Vec<String> {
+    fn assemble_function(&mut self, function: &Function) -> Vec<String> {
         // Function start
         let mut function_instructions: Vec<String> = vec![
             format!("{}:", function.name),
@@ -122,10 +128,10 @@ impl Assembler {
         return function_instructions
     }
 
-    fn assemble_conditional_loop(&self, variable_history: &VariableHistory, conditional_loop: &ConditionalLoop) -> Vec<String> {
+    fn assemble_conditional_loop(&mut self, variable_history: &VariableHistory, conditional_loop: &ConditionalLoop) -> Vec<String> {
         let mut appended_instructions: Vec<String> = Vec::new();
 
-        let branch_name = format!(".loop{}", conditional_loop.index);
+        let branch_name = format!(".loop{}", self.conditional_loop_counter);
 
         // Assemble the header
         appended_instructions.append(&mut vec![
@@ -186,13 +192,14 @@ impl Assembler {
             format!("  {}_end:", branch_name)
         ]);
 
+        self.conditional_loop_counter += 1;
         return appended_instructions;
     }
 
-    fn assemble_conditional_statement(&self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Result<Vec<String>, AssemblerError> {
+    fn assemble_conditional_statement(&mut self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Result<Vec<String>, AssemblerError> {
         let mut appended_instructions: Vec<String> = Vec::new();
 
-        let branch_name = format!(".cmp{}", conditional_statement.index);
+        let branch_name = format!(".cmp{}", self.conditional_statement_counter);
 
         // Assemble the header
         for (i, (condition_wrapped, _)) in conditional_statement.condition_fields.iter().enumerate() {
@@ -268,6 +275,7 @@ impl Assembler {
             format!("{}_end:", branch_name)
         ]);
 
+        self.conditional_statement_counter += 1;
         return Ok(appended_instructions)
     }
 
