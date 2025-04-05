@@ -4,7 +4,6 @@ use super::Token;
 
 #[derive(Clone, Debug)]
 pub struct ConditionalLoop {
-    pub index: usize,
     pub condition: Assignment,
     pub functionality: Vec<Token>,
 }

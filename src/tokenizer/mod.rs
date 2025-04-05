@@ -56,8 +56,6 @@ pub enum Token {
 pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
-    conditional_statement_counter: usize,
-    conditional_loop_counter: usize,
     function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
@@ -65,8 +63,6 @@ pub struct Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
-        conditional_loop_counter: 0,
-        conditional_statement_counter: 0,
         function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
     }}
@@ -280,11 +276,9 @@ pub struct Tokenizer {
 
         // Construct the token
         let conditional_loop_token = ConditionalLoop {
-            index: self.conditional_loop_counter,
             condition,
             functionality,
         };
-        self.conditional_loop_counter += 1;
 
         // Return it
         return Token::ConditionalLoop(conditional_loop_token);
@@ -354,11 +348,9 @@ pub struct Tokenizer {
         }
 
         let conditional_statement_token = ConditionalStatement {
-            index: self.conditional_statement_counter,
             active_variables,
             condition_fields: condition_fields_slices,
         };
-        self.conditional_statement_counter += 1;
 
         return Ok(Token::ConditionalStatement(conditional_statement_token))
     }
