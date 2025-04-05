@@ -1,11 +1,12 @@
 use std::vec;
 
 use crate::tokenizer::{
+    Token,
     declaration::Declaration,
     function::{Function, Return},
     reassignment::Reassignment,
     structures::VariableHistory,
-    Token
+    conditional_statement::ConditionalStatement,
 };
 
 
@@ -91,11 +92,9 @@ impl Assembler {
             Token::Return(return_statement) => {
                 function_instructions.append(&mut self.assemble_return(&function.variable_history, return_statement));
             }
-/*
             Token::ConditionalStatement(conditional_statement) => {
                 function_instructions.append(&mut self.assemble_conditional_statement(&function.variable_history, conditional_statement));
             }
-*/
             _ => {}
         }}
 
@@ -125,28 +124,12 @@ impl Assembler {
         return function_instructions
     }
 
-/*
     fn assemble_conditional_statement(&self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Vec<String> {
         let mut appended_instructions: Vec<String> = Vec::new();
 
-        let conditional_statement_label_name = format!(".cs{}", conditional_statement.index);
-
-        let condition_instructions = conditional_statement.condition.to_assembly_instructions(variable_history).unwrap();
-        appended_instructions.append_immut(&condition_instructions);
-
-        appended_instructions.append(&mut vec![
-            format!("  cmp rdi, 1"),
-            format!("  je {}_t", conditional_statement_label_name),
-            format!("  jmp {}_f", conditional_statement_label_name),
-        ]);
-
-        appended_instructions.append(&mut vec![
-            format!("{}_t:", conditional_statement_label_name),
-        ]);
 
         return appended_instructions
     }
-*/
 
     fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> {
         let assignment_instructions = declaration.value.clone().to_assembly_instructions("rdi", stack_memory);

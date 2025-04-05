@@ -155,7 +155,8 @@ pub struct Tokenizer {
                     let declaration_stop_index = self.find_end_of_block(content_to_tokenize, block_start_index).unwrap();
 
                     // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_conditional_statement(parent, content_to_tokenize[i..=declaration_stop_index].to_vec());
+                    let created_token = self.parse_conditional_statement(parent, content_to_tokenize[i..=declaration_stop_index].to_vec())
+                        .unwrap();
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -233,7 +234,7 @@ pub struct Tokenizer {
         }
     }
 
-    fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: Vec<String>) -> Token {
+    fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: Vec<String>) -> Result<Token, TokenizerError> {
         // Get necessary characters
         let begin_comparison_conditions_char = self.syntax_elements.assignment_symbols["begin comparison conditions"].clone();
         let end_comparison_conditions_char   = self.syntax_elements.assignment_symbols["end comparison conditions"].clone();
@@ -274,14 +275,21 @@ pub struct Tokenizer {
             // get the block index and parse it
             let block_start_index  = conditional_statement.find_after_index(i, &begin_block_char).unwrap();
             let block_end_index    = self.find_end_of_block(&conditional_statement, block_start_index).unwrap();
-            vec_pointer_debug!(conditional_statement, block_start_index => Green, block_end_index => Magenta);
             let inline_block_slice = conditional_statement[block_start_index+1..=block_end_index-1].to_owned();
             let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
+
+            // make sure each variable was passed
+            if let Some(assignment) = &field_condition {
+                let vars_used_in_assignment = assignment.get_all_vars_used();
+                for var in vars_used_in_assignment.iter() {
+                    if let None = active_variables.find(var) { return Err(TokenizerError::VarNotUsedInComparison) }
+                }
+            }
 
             // push this
             condition_fields_slices.push((field_condition, inline_block));
 
-            // If there is another enclosure, jump i to there. If not, break the loop
+            // if there is another enclosure, jump i to there. If not, break the loop
             if let Some(found_index) = conditional_statement.find_after_index(end_enclosure_index, &begin_enclosure_char) {
                 i = found_index
             } else {
@@ -296,7 +304,7 @@ pub struct Tokenizer {
             condition_fields: condition_fields_slices,
         };
 
-        return Token::ConditionalStatement(conditional_statement_token)
+        return Ok(Token::ConditionalStatement(conditional_statement_token))
     }
 
     fn parse_reassignment(&self, variable_history: &VariableHistory, reassignment: Vec<String>) -> Token {
