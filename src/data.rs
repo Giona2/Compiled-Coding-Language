@@ -73,6 +73,7 @@ pub struct SyntaxElements {
             "reassignment"               => "chng",
             "conditional statement"      => "cmpr",
             "else conditional statement" => "otherwise",
+            "conditional loop"           => "repeat",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![
@@ -86,6 +87,8 @@ pub struct SyntaxElements {
             "equals"                      => "=",
             "begin body"                  => ":",
             "end body"                    => ";",
+            "begin loop condition"        => ":*[",
+            "end loop condition"          => "]",
             "begin comparison conditions" => ":&[",
             "end comparison conditions"   => "]",
             "associate with"              => "=>",
