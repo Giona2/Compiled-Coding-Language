@@ -1,3 +1,8 @@
+use std::fmt::Debug;
+
+use colored::Colorize;
+
+
 pub trait StrVecExtra {
     /// Converts a `Vec<&str>` to a `Vec<String>`
     fn to_string_vec(&self) -> Vec<String>;
@@ -185,6 +190,19 @@ impl<T: Eq + Clone> VecExtra<T> for Vec<T> {
     fn append_immut(&mut self, appended_slice: &[T]) {
         for element in appended_slice.iter() {
             self.push(element.clone());
+        }
+    }
+}
+
+pub trait VecDebugging<T: Debug> {
+    /// Prints this entire vector, where the value of index `i` is colored
+    fn display_pointer(&self, pointer: usize);
+}
+impl<T: Debug> VecDebugging<T> for Vec<T> {
+    fn display_pointer(&self, pointer: usize) {
+        for (i, element) in self.iter().enumerate() {
+            if i != pointer { println!("{} {:?}", i.to_string().red(), element)   }
+            else            { println!("{} {:?}", i.to_string().green(), element) }
         }
     }
 }
