@@ -83,6 +83,16 @@ pub enum ComparisonOperator {
             }
         }
     }
+
+    /// Returns the polar opposite operator of `self`
+    pub fn negation(&self) -> Self { match self {
+        Self::EQ  => { return Self::NEQ }
+        Self::NEQ => { return Self::EQ  }
+        Self::GT  => { return Self::LEQ }
+        Self::GEQ => { return Self::LT  }
+        Self::LT  => { return Self::GEQ }
+        Self::LEQ => { return Self::GT  }
+    }}
 }
 
 

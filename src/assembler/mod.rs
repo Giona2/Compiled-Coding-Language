@@ -1,7 +1,7 @@
 use std::vec;
 
 use crate::tokenizer::{
-    conditional_statement::ConditionalStatement, declaration::Declaration, enumerators::{Assignment, ComparisonOperator}, function::{Function, Return}, reassignment::Reassignment, structures::VariableHistory, Token
+    conditional_loop::ConditionalLoop, conditional_statement::ConditionalStatement, declaration::Declaration, enumerators::{Assignment, ComparisonOperator}, function::{Function, Return}, reassignment::Reassignment, structures::VariableHistory, Token
 };
 
 
@@ -90,6 +90,9 @@ impl Assembler {
             Token::ConditionalStatement(conditional_statement) => {
                 function_instructions.append(&mut self.assemble_conditional_statement(&function.variable_history, conditional_statement).unwrap());
             }
+            Token::ConditionalLoop(conditional_loop) => {
+                function_instructions.append(&mut self.assemble_conditional_loop(&function.variable_history, conditional_loop));
+            }
             _ => {}
         }}
 
@@ -117,6 +120,73 @@ impl Assembler {
 
         // Return the result
         return function_instructions
+    }
+
+    fn assemble_conditional_loop(&self, variable_history: &VariableHistory, conditional_loop: &ConditionalLoop) -> Vec<String> {
+        let mut appended_instructions: Vec<String> = Vec::new();
+
+        let branch_name = format!(".loop{}", conditional_loop.index);
+
+        // Assemble the header
+        appended_instructions.append(&mut vec![
+            format!("{}:", branch_name),
+        ]);
+        if let Assignment::CMP(first_assignment, operator, second_assignment) = &conditional_loop.condition {
+            appended_instructions.append(&mut vec![
+                first_assignment.to_assembly_instructions("rdi", variable_history).unwrap(),
+                second_assignment.to_assembly_instructions("rsi", variable_history).unwrap(),
+            ].concat());
+            appended_instructions.append(&mut vec![
+                format!("  cmp rdi, rsi")
+            ]);
+
+            match operator.negation() {
+                ComparisonOperator::EQ  => { appended_instructions.append(&mut vec![
+                    format!("  je {}_end", branch_name),
+                ]);}
+                ComparisonOperator::NEQ => { appended_instructions.append(&mut vec![
+                    format!("  jne {}_end", branch_name),
+                ]);}
+                ComparisonOperator::GT  => { appended_instructions.append(&mut vec![
+                    format!("  jg {}_end", branch_name),
+                ]);}
+                ComparisonOperator::GEQ => { appended_instructions.append(&mut vec![
+                    format!("  jge {}_end", branch_name),
+                ]);}
+                ComparisonOperator::LT  => { appended_instructions.append(&mut vec![
+                    format!("  jl {}_end", branch_name),
+                ]);}
+                ComparisonOperator::LEQ => { appended_instructions.append(&mut vec![
+                    format!("  jle {}_end", branch_name),
+                ]);}
+            }
+        }
+
+        // Assemble the functionality
+        for token in &conditional_loop.functionality { match token {
+            Token::Declaration(declaration) => {
+                appended_instructions.append(&mut self.assemble_declaration(variable_history, declaration));
+            }
+            Token::Reassignment(reassignment) => {
+                appended_instructions.append(&mut self.assemble_reassignment(variable_history, reassignment));
+            }
+            Token::Return(return_statement) => {
+                appended_instructions.append(&mut self.assemble_return(variable_history, return_statement));
+            }
+            _ => {}
+        }}
+
+        // Ensure the loop jumps back to the beginning
+        appended_instructions.append(&mut vec![
+            format!("  jmp {}", branch_name)
+        ]);
+
+        // Define the end of the loop
+        appended_instructions.append(&mut vec![
+            format!("  {}_end:", branch_name)
+        ]);
+
+        return appended_instructions;
     }
 
     fn assemble_conditional_statement(&self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Result<Vec<String>, AssemblerError> {
