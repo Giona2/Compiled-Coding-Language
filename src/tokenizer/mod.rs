@@ -71,8 +71,6 @@ pub struct Tokenizer {
     }
 
     pub fn generate_token_tree(&mut self, parent_ref: &mut Option<&mut Function>, content_to_tokenize: &Vec<String>) -> Vec<Token> {
-        println!("coding_language::tokenizer::Tokenizer::generate_token_tree()");
-
         let mut result: Vec<Token> = Vec::new();
 
         let mut i: usize = 0;
@@ -102,7 +100,6 @@ pub struct Tokenizer {
                 }}
 
                 val if *val == self.syntax_elements.declaration_names["reassignment"] => { if let Some(parent) = parent_ref {
-                    println!("  found reassignment\n  given: {:?}", content_to_tokenize[i..].to_owned());
                     // Get the first instance of the end assignment character after the
                     // declaration (therefore ending it)
                     let declaration_stop_char = self.syntax_elements.assignment_symbols.get("end assignment").unwrap();
@@ -114,7 +111,6 @@ pub struct Tokenizer {
 
                     // Parse the slice into a token and add it to the result
                     let created_token = self.parse_reassignment(&parent.variable_history, declaration_to_evaluate);
-                    println!("  reassignment: {created_token:?}");
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -203,7 +199,6 @@ pub struct Tokenizer {
     ///
     /// Note that you should place the start_index at the beginning of the block
     fn find_end_of_block(&self, content: &[String], start_index: usize) -> Result<usize, TokenizerError> {
-        println!("coding_language::tokenizer::Tokenizer::find_end_of_block()");
         // Keep track of the end_of_block_index
         let mut end_of_block_index: Option<usize> = None;
 
@@ -213,8 +208,6 @@ pub struct Tokenizer {
         // Iterate through each character
         let mut i = start_index;
         while i < content.len() {
-            println!("  current char: {}", content[i]);
-            println!("  block counter: {}", current_block_counter);
             if content[i] == self.syntax_elements.assignment_symbols["begin body"] {
                 current_block_counter += 1
             }
@@ -262,12 +255,12 @@ pub struct Tokenizer {
 
         // Get each condition field
         let mut condition_fields_slices: Vec<(Option<Assignment>, Vec<Token>)> = Vec::new();
-        let mut i = 0;
+        let mut i = conditional_statement.find(&begin_enclosure_char).unwrap();
         while i < conditional_statement.len() {
+            println!("coding_language::tokenizer::Tokenizer::parse_conditional_statement(): current_char {:?}", conditional_statement[i]);
             // get index of necessary chars
-            let begin_enclosure_index = conditional_statement.find_after_index(i, &begin_enclosure_char).unwrap();
-            let end_enclosure_index   = conditional_statement.find_after_index(i, &end_enclosure_char).unwrap();
-            let enclosure_slice       = conditional_statement[begin_enclosure_index+1..=end_enclosure_index-1].to_vec();
+            let end_enclosure_index = conditional_statement.find_after_index(i, &end_enclosure_char).unwrap();
+            let enclosure_slice     = conditional_statement[i+1..=end_enclosure_index-1].to_owned();
 
             // get the condition of current field
             let field_condition: Option<Assignment>;
@@ -283,9 +276,15 @@ pub struct Tokenizer {
             let inline_block_slice = conditional_statement[block_start_index+1..=block_end_index-1].to_owned();
             let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
 
+            // push this
             condition_fields_slices.push((field_condition, inline_block));
 
-            i = block_end_index;
+            // If there is another enclosure, jump i to there. If not, break the loop
+            if let Some(found_index) = conditional_statement.find_after_index(end_enclosure_index, &begin_enclosure_char) {
+                i = found_index
+            } else {
+                break;
+            }
         }
 
         self.conditional_statement_counter += 1;
@@ -325,9 +324,6 @@ pub struct Tokenizer {
     }
 
     fn parse_variable(&self, variable_history: &mut VariableHistory, declaration: Vec<String>) -> Token {
-        println!("coding_language::tokenizer::Tokenizer::parse_variable()");
-        println!("  recieved: {:?}", declaration);
-
         // Get the necessary characters
         let equals_char         = self.syntax_elements.assignment_symbols.get("equals").unwrap();
         let begin_set_type_char = self.syntax_elements.assignment_symbols.get("begin set type").unwrap();
@@ -366,9 +362,6 @@ pub struct Tokenizer {
     }
 
     fn parse_function(&mut self, declaration: Vec<String>) -> Token {
-        println!("coding_language::tokenizer::Tokenizer::parse_function()");
-        println!("  recieved: {declaration:?}");
-
         // Get necessary characters
         let block_start_char = self.syntax_elements.assignment_symbols.get("begin body")
             .unwrap();

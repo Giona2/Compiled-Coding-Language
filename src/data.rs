@@ -87,7 +87,7 @@ pub struct SyntaxElements {
             "begin body"                  => ":",
             "end body"                    => ";",
             "begin comparison conditions" => ":&[",
-            "end comparison comparison"   => "]",
+            "end comparison conditions"   => "]",
             "associate with"              => "=>",
             "begin set type"              => ":=[",
             "end set type"                => "]",
