@@ -98,6 +98,8 @@ pub enum Assignment {
 } impl Assignment {
     /// Parses a string vector (an equation) into an Assignment
     pub fn from_string_vec(tokenizer: &Tokenizer, variable_history: &VariableHistory, string_equation: Vec<String>) -> Self {
+        println!("coding_language::tokenizer::enumerators::Assignment::from_string_vec(): {:?}", string_equation);
+
         let syntax_elements = SyntaxElements::init();
 
         let operator_symbols = syntax_elements.get_all_operator_symbols();

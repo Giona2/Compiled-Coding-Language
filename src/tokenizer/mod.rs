@@ -4,6 +4,7 @@ use crate::data::{SyntaxElements, MEMORY_STEP};
 
 #[allow(dead_code)]
 pub mod conditional_loop;
+    use conditional_loop::ConditionalLoop;
 
 #[allow(dead_code)]
 pub mod structures;
@@ -42,6 +43,7 @@ pub mod conditional_statement;
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub enum Token {
+    ConditionalLoop(ConditionalLoop),
     Function(Function),
     TerminatingLoop(TerminatingLoop),
     ConditionalStatement(ConditionalStatement),
@@ -55,6 +57,7 @@ pub struct Tokenizer {
     pub token_tree: Vec<Token>,
 
     conditional_statement_counter: usize,
+    conditional_loop_counter: usize,
     function_history: FunctionHistory,
     syntax_elements: SyntaxElements,
 
@@ -62,6 +65,7 @@ pub struct Tokenizer {
     pub fn init() -> Self { Self {
         token_tree: Vec::new(),
 
+        conditional_loop_counter: 0,
         conditional_statement_counter: 0,
         function_history: FunctionHistory::init(),
         syntax_elements: SyntaxElements::init(),
@@ -178,8 +182,7 @@ pub struct Tokenizer {
                     let declaration_stop_index = self.find_end_of_block(content_to_tokenize, block_start_index).unwrap();
 
                     // Parse the slice into a token and add it to the result
-                    let created_token = self.parse_conditional_loop(parent, content_to_tokenize[i..=declaration_stop_index].to_vec())
-                        .unwrap();
+                    let created_token = self.parse_conditional_loop(parent, content_to_tokenize[i..=declaration_stop_index].to_vec());
                     result.push(created_token);
 
                     // Move the current word to one word after the end of this declaration and
@@ -257,8 +260,34 @@ pub struct Tokenizer {
         }
     }
 
-    fn parse_conditional_loop(&self, parent: &Function, conditional_loop: Vec<String>) -> Token {
-        todo!()
+    fn parse_conditional_loop(&mut self, parent: &mut Function, conditional_loop: Vec<String>) -> Token {
+        // Get necessary characters
+        let begin_condition_char = self.syntax_elements.assignment_symbols["begin loop condition"].clone();
+        let end_condition_char   = self.syntax_elements.assignment_symbols["end loop condition"].clone();
+        let begin_body_char      = self.syntax_elements.assignment_symbols["begin body"].clone();
+
+        // Parse the condition
+        let begin_condition_index = conditional_loop.find(&begin_condition_char).unwrap();
+        let end_condition_index   = conditional_loop.find(&end_condition_char).unwrap();
+        let condition_slice       = conditional_loop[begin_condition_index+1..=end_condition_index-1].to_vec();
+        let condition             = Assignment::from_string_vec(self, &parent.variable_history, condition_slice);
+
+        // Parse the body
+        let begin_body_index = conditional_loop.find(&begin_body_char).unwrap();
+        let end_body_index   = self.find_end_of_block(&conditional_loop, begin_body_index).unwrap();
+        let body_slice       = conditional_loop[begin_body_index+1..=end_body_index-1].to_owned();
+        let functionality    = self.generate_token_tree(&mut Some(parent), &body_slice);
+
+        // Construct the token
+        let conditional_loop_token = ConditionalLoop {
+            index: self.conditional_loop_counter,
+            condition,
+            functionality,
+        };
+        self.conditional_loop_counter += 1;
+
+        // Return it
+        return Token::ConditionalLoop(conditional_loop_token);
     }
 
     fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: Vec<String>) -> Result<Token, TokenizerError> {
@@ -324,12 +353,12 @@ pub struct Tokenizer {
             }
         }
 
-        self.conditional_statement_counter += 1;
         let conditional_statement_token = ConditionalStatement {
             index: self.conditional_statement_counter,
             active_variables,
             condition_fields: condition_fields_slices,
         };
+        self.conditional_statement_counter += 1;
 
         return Ok(Token::ConditionalStatement(conditional_statement_token))
     }
