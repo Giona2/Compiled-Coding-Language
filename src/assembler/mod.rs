@@ -1,12 +1,7 @@
 use std::vec;
 
 use crate::tokenizer::{
-    Token,
-    declaration::Declaration,
-    function::{Function, Return},
-    reassignment::Reassignment,
-    structures::VariableHistory,
-    conditional_statement::ConditionalStatement,
+    conditional_statement::ConditionalStatement, declaration::Declaration, enumerators::{Assignment, ComparisonOperator}, function::{Function, Return}, reassignment::Reassignment, structures::VariableHistory, Token
 };
 
 
@@ -93,7 +88,7 @@ impl Assembler {
                 function_instructions.append(&mut self.assemble_return(&function.variable_history, return_statement));
             }
             Token::ConditionalStatement(conditional_statement) => {
-                function_instructions.append(&mut self.assemble_conditional_statement(&function.variable_history, conditional_statement));
+                function_instructions.append(&mut self.assemble_conditional_statement(&function.variable_history, conditional_statement).unwrap());
             }
             _ => {}
         }}
@@ -124,11 +119,86 @@ impl Assembler {
         return function_instructions
     }
 
-    fn assemble_conditional_statement(&self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Vec<String> {
+    fn assemble_conditional_statement(&self, variable_history: &VariableHistory, conditional_statement: &ConditionalStatement) -> Result<Vec<String>, AssemblerError> {
         let mut appended_instructions: Vec<String> = Vec::new();
 
+        let branch_name = format!(".cmp{}", conditional_statement.index);
 
-        return appended_instructions
+        // Assemble the header
+        for (i, (condition_wrapped, _)) in conditional_statement.condition_fields.iter().enumerate() {
+
+            if let Some(condition) = condition_wrapped { if let Assignment::CMP(first_assignment, operator, second_assignment) = condition {
+                // put first and second values into registers
+                appended_instructions.append(&mut vec![
+                    first_assignment.to_assembly_instructions("rdi", variable_history).unwrap(),
+                    second_assignment.to_assembly_instructions("rsi", variable_history).unwrap(),
+                ].concat());
+                appended_instructions.append(&mut vec![
+                    format!("  cmp rdi, rsi")
+                ]);
+
+                match operator {
+                    ComparisonOperator::EQ  => { appended_instructions.append(&mut vec![
+                        format!("  je {}_br{}", branch_name, i),
+                    ]);}
+                    ComparisonOperator::NEQ => { appended_instructions.append(&mut vec![
+                        format!("  jne {}_br{}", branch_name, i),
+                    ]);}
+                    ComparisonOperator::GT  => { appended_instructions.append(&mut vec![
+                        format!("  jg {}_br{}", branch_name, i),
+                    ]);}
+                    ComparisonOperator::GEQ => { appended_instructions.append(&mut vec![
+                        format!("  jge {}_br{}", branch_name, i),
+                    ]);}
+                    ComparisonOperator::LT  => { appended_instructions.append(&mut vec![
+                        format!("  jl {}_br{}", branch_name, i),
+                    ]);}
+                    ComparisonOperator::LEQ => { appended_instructions.append(&mut vec![
+                        format!("  jle {}_br{}", branch_name, i),
+                    ]);}
+                }
+            } else { return Err(AssemblerError::AssignmentInComparisonNotComparison); } }
+            else { appended_instructions.append(&mut vec![
+                format!("  jmp {}_br{}", branch_name, i)
+            ]);}
+        }
+        appended_instructions.append(&mut vec![
+            format!("  jmp {}_end", branch_name)
+        ]);
+
+        // Assemble the branches
+        for (i, (_, token_tree)) in conditional_statement.condition_fields.iter().enumerate() {
+            // declare the branch
+            appended_instructions.append(&mut vec![
+                format!("{}_br{}:", branch_name, i)
+            ]);
+
+            // assemble its declaration
+            for token in token_tree.iter() { match token {
+                Token::Declaration(declaration) => {
+                    appended_instructions.append(&mut self.assemble_declaration(variable_history, declaration));
+                }
+                Token::Reassignment(reassignment) => {
+                    appended_instructions.append(&mut self.assemble_reassignment(variable_history, reassignment));
+                }
+                Token::Return(return_statement) => {
+                    appended_instructions.append(&mut self.assemble_return(variable_history, return_statement));
+                }
+                _ => {}
+            }}
+
+            // conclude it by jumping to the end
+            appended_instructions.append(&mut vec![
+                format!("  jmp {}_end", branch_name)
+            ]);
+        }
+
+        // Assemble the end branch
+        appended_instructions.append(&mut vec![
+            format!("{}_end:", branch_name)
+        ]);
+
+        return Ok(appended_instructions)
     }
 
     fn assemble_declaration(&self, stack_memory: &VariableHistory, declaration: &Declaration) -> Vec<String> {

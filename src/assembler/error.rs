@@ -20,4 +20,6 @@ pub enum AssemblerError {
     #[error("An assignment was incorrectly formatted\n
              This is most commonly caused by mixing value types in equations")]
     IncorrectAssignmentFormatting,
+    #[error("A branch in a cmp was not a comparison")]
+    AssignmentInComparisonNotComparison,
 }
