@@ -1,8 +1,3 @@
-use std::fmt::Debug;
-
-use colored::{ColoredString, Colorize};
-
-
 pub trait StrVecExtra {
     /// Converts a `Vec<&str>` to a `Vec<String>`
     fn to_string_vec(&self) -> Vec<String>;
@@ -194,13 +189,24 @@ impl<T: Eq + Clone> VecExtra<T> for Vec<T> {
     }
 }
 
-/// display_vec_pointer!(vec, 2 => Blue,)
+#[macro_export]
+/// display_vec_pointer!(vec, "begin"; 2 => Blue,)
 macro_rules! vec_pointer_debug {
-    ($vec:expr, $($index:expr => $color:ident),*) => {
-        $( println!("") )*
-    };
+    ($vec:expr, $($index:expr => $color:ident),*) => {{
+        use colored::Color;
+        use colored::Colorize;
+        for (i, element) in $vec.iter().enumerate() {
+            $(
+            if i == $index {
+                println!("{} {:?}", i.to_string().color(Color::$color), element);
+            }
+            )*
+            println!("{} {:?}", i.to_string().red(), element);
+        }
+    }};
 }
 
+/*
 pub trait VecDebugging<T: Debug> {
     /// Prints this entire vector, where the value of index `pointer` is colored
     fn display_pointer(&self, pointer: usize) -> ColoredString;
@@ -208,6 +214,8 @@ pub trait VecDebugging<T: Debug> {
 impl<T: Debug> VecDebugging<T> for Vec<T> {
     fn display_pointer(&self, pointer: usize) -> ColoredString {
         let mut result: ColoredString = String::new().into();
+        let color = Color::Green;
+        let test: ColoredString = "".color(color);
 
         for (i, element) in self.iter().enumerate() {
             if i != pointer { result = format!("{}\n{} {:?}", result, i.to_string().red(), element).into()  }
@@ -217,3 +225,4 @@ impl<T: Debug> VecDebugging<T> for Vec<T> {
         return result
     }
 }
+*/

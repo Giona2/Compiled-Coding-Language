@@ -1,4 +1,5 @@
-use crate::type_traits::vector::{VecExtra, VecDebugging};
+use crate::type_traits::vector::VecExtra;
+use crate::vec_pointer_debug;
 use crate::data::{SyntaxElements, MEMORY_STEP};
 
 
@@ -238,6 +239,7 @@ pub struct Tokenizer {
         let end_comparison_conditions_char   = self.syntax_elements.assignment_symbols["end comparison conditions"].clone();
         let begin_enclosure_char             = self.syntax_elements.assignment_symbols["begin enclosure"].clone();
         let end_enclosure_char               = self.syntax_elements.assignment_symbols["end enclosure"].clone();
+        let begin_block_char                 = self.syntax_elements.assignment_symbols["begin body"].clone();
         let else_comparison_statement_char   = self.syntax_elements.declaration_names["else conditional statement"].clone();
 
         // Get active variables slice
@@ -270,10 +272,9 @@ pub struct Tokenizer {
             }
 
             // get the block index and parse it
-            let block_start_index  = conditional_statement.find_after_index(i, &begin_enclosure_char).unwrap();
+            let block_start_index  = conditional_statement.find_after_index(i, &begin_block_char).unwrap();
             let block_end_index    = self.find_end_of_block(&conditional_statement, block_start_index).unwrap();
-            println!("{}", conditional_statement.display_pointer(block_start_index));
-            println!("{}", conditional_statement.display_pointer(block_end_index));
+            vec_pointer_debug!(conditional_statement, block_start_index => Green, block_end_index => Magenta);
             let inline_block_slice = conditional_statement[block_start_index+1..=block_end_index-1].to_owned();
             let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
 
