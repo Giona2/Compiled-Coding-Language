@@ -161,6 +161,34 @@ pub enum Assignment {
         }
     }}
 
+    pub fn get_all_vars_used(&self) -> Vec<usize> { match self {
+        Self::EVAL(first_assignment, _, second_assignment) => {
+            let mut result: Vec<usize> = Vec::new();
+
+            if let Self::VAR(location) = *first_assignment.clone() {
+                result.push(location);
+            }
+            if let Self::VAR(location) = *second_assignment.clone() {
+                result.push(location);
+            }
+
+            return result;
+        }
+        Self::CMP(first_assignment, _, second_assignment) => {
+            let mut result: Vec<usize> = Vec::new();
+
+            if let Self::VAR(location) = *first_assignment.clone() {
+                result.push(location);
+            }
+            if let Self::VAR(location) = *second_assignment.clone() {
+                result.push(location);
+            }
+
+            return result;
+        }
+        _ => { return Vec::new() }
+    }}
+
     /// Parses a singular term in an equation (functions, numbers) into Self
     fn from_equation_term(tokenizer: &Tokenizer, variable_history: &VariableHistory, term: Vec<String>) -> Result<Self, TokenizerError> {
         println!("coding_language::tokenizer::enumerators::Assignment::from_equation_term()");

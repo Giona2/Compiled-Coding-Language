@@ -18,7 +18,10 @@ pub enum TokenizerError {
     #[error("Tokenizer could not find the end of this block.
              Ensure you properly ended this block or didn't forget any miscellanious end block characters")]
     CouldNotFindEndOfBlock,
-    #[error("A non-condition assignment was used to construct this conditional statement\n
+    #[error("A non-condition assignment was used to construct this conditional statement.
              Ensure you used a conditional statement or a tof value")]
-    IncorrectAssignmentForConditionalCondition
+    IncorrectAssignmentForConditionalCondition,
+    #[error("A variable was not passed through a cmp and was used in one of the branches.
+             Ensure you have passed the variable between the :&[]")]
+    VarNotUsedInComparison,
 }

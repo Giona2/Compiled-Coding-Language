@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 # error handling
 thiserror = "2.0.12"
+
+# debugging
+colored = "3.0"

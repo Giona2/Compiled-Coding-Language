@@ -67,11 +67,12 @@ pub struct SyntaxElements {
         ].to_string_hashmap(),
 
         declaration_names: hashmap![
-            "variable"              => "decl",
-            "function"              => "subroutine",
-            "return"                => "expose",
-            "reassignment"          => "chng",
-            "conditional statement" => "cmpr",
+            "variable"                   => "decl",
+            "function"                   => "subroutine",
+            "return"                     => "expose",
+            "reassignment"               => "chng",
+            "conditional statement"      => "cmpr",
+            "else conditional statement" => "otherwise",
         ].to_string_hashmap(),
 
         math_symbols: hashmap![
@@ -82,19 +83,21 @@ pub struct SyntaxElements {
         ].to_string_hashmap(),
 
         assignment_symbols: hashmap![
-            "equals"              => "=",
-            "begin body"          => ":",
-            "end body"            => ";",
-            "begin comparison"    => ":&[",
-            "end comparison"      => "]",
-            "associate with"      => "=>",
-            "begin set type"      => ":=[",
-            "end set type"        => "]",
-            "end assignment"      => "\n",
-            "begin conditions"    => "::[",
-            "condition seperator" => ",",
-            "end conditions"      => "]",
-            "return this"         => "->",
+            "equals"                      => "=",
+            "begin body"                  => ":",
+            "end body"                    => ";",
+            "begin comparison conditions" => ":&[",
+            "end comparison conditions"   => "]",
+            "associate with"              => "=>",
+            "begin set type"              => ":=[",
+            "end set type"                => "]",
+            "end assignment"              => "\n",
+            "begin conditions"            => "::[",
+            "condition seperator"         => ",",
+            "end conditions"              => "]",
+            "begin enclosure"             => "[",
+            "end enclosure"               => "]",
+            "return this"                 => "->",
         ].to_string_hashmap(), 
 
         comparision_symbols: hashmap![
