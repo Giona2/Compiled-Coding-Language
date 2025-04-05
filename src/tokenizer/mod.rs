@@ -1,4 +1,4 @@
-use crate::type_traits::vector::VecExtra;
+use crate::type_traits::vector::{VecExtra, VecDebugging};
 use crate::data::{SyntaxElements, MEMORY_STEP};
 
 
@@ -257,7 +257,6 @@ pub struct Tokenizer {
         let mut condition_fields_slices: Vec<(Option<Assignment>, Vec<Token>)> = Vec::new();
         let mut i = conditional_statement.find(&begin_enclosure_char).unwrap();
         while i < conditional_statement.len() {
-            println!("coding_language::tokenizer::Tokenizer::parse_conditional_statement(): current_char {:?}", conditional_statement[i]);
             // get index of necessary chars
             let end_enclosure_index = conditional_statement.find_after_index(i, &end_enclosure_char).unwrap();
             let enclosure_slice     = conditional_statement[i+1..=end_enclosure_index-1].to_owned();
@@ -273,6 +272,8 @@ pub struct Tokenizer {
             // get the block index and parse it
             let block_start_index  = conditional_statement.find_after_index(i, &begin_enclosure_char).unwrap();
             let block_end_index    = self.find_end_of_block(&conditional_statement, block_start_index).unwrap();
+            println!("{}", conditional_statement.display_pointer(block_start_index));
+            println!("{}", conditional_statement.display_pointer(block_end_index));
             let inline_block_slice = conditional_statement[block_start_index+1..=block_end_index-1].to_owned();
             let inline_block = self.generate_token_tree(&mut Some(parent), &inline_block_slice);
 
