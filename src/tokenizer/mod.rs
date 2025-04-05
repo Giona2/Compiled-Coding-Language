@@ -165,6 +165,27 @@ pub struct Tokenizer {
                     continue;
                 }}
 
+                val if *val == self.syntax_elements.declaration_names["conditional loop"] => { if let Some(parent) = parent_ref.as_mut() {
+                    // Get necessary chars
+                    let block_start_char = self.syntax_elements.assignment_symbols["begin body"].clone();
+
+                    // Get the index of the chars
+                    let block_start_index = content_to_tokenize.find_after_index(i, &block_start_char).unwrap();
+
+                    // Get the index of the end of this comparison
+                    let declaration_stop_index = self.find_end_of_block(content_to_tokenize, block_start_index).unwrap();
+
+                    // Parse the slice into a token and add it to the result
+                    let created_token = self.parse_conditional_loop(parent, content_to_tokenize[i..=declaration_stop_index].to_vec())
+                        .unwrap();
+                    result.push(created_token);
+
+                    // Move the current word to one word after the end of this declaration and
+                    // continue the loop
+                    i = declaration_stop_index;
+                    continue;
+                }}
+
                 val if *val == self.syntax_elements.declaration_names["return"] => { if let Some(parent) = parent_ref.as_mut() {
                     // Get the first instance of the end block character after the
                     // declaration (therefore ending it)
@@ -232,6 +253,10 @@ pub struct Tokenizer {
             Some(index) => { return Ok(index) }
             None        => { return Err(TokenizerError::CouldNotFindEndOfBlock) }
         }
+    }
+
+    fn parse_conditional_loop(&self, parent: &Function, conditional_loop: Vec<String>) -> Token {
+        todo!()
     }
 
     fn parse_conditional_statement(&mut self, parent: &mut Function, conditional_statement: Vec<String>) -> Result<Token, TokenizerError> {
