@@ -4,36 +4,39 @@ If you're here to critique this repository, please see [Source code deep-dive we
 
 ## Table of Contents
 * [Overview](#overview)
-* [Math Declarations](#math-declarations)
-* [Links](#links)
+* [Variable Declaration](#variable-declaration)
+* [Function Declaration](#function-declaration)
 
 ## Overview
-This is a minimalistic compiler that converts C-like syntaxing to an x86_64 NASM ELF assembly script for Linux distributions  
-At the moment, it can only process variable declarations (floating point numbers `float` and integers `int`) that can be declared just like you would in C or C++
-___
-For example...
-```custom
-int x = 1;
-float y = 2;
-```
-Would initalize the variable `x` as an integer of `1` and `y` as a floating point number of `2`
-___
+Unimal is very simple procedural coding language that closely follows assembly in the same vane as C. Because of the way this compiler functions, most actions you write require prefixing using reserved keywords.
 
-## Math Declarations
-It can also perform basic arithmetic with numbers and stored variables with `+`, `-`, `*`, `/`  
-This compiler will only perform one math operation at a time. It does not support equation parsing  
-  
-*Note that the `/` operator only works with floating point numbers. `int i = 1/2;` will return an error.*  
-*`float i = 1/2` will parse and execute correctly*  
-  
-___
-For example...
-```custom
-int x = 6;
-int y = x + 3;
-```
-would equate `y` to 9
-___
+## Variable Declaration
+If you wanted to create an integer, `i`, equal to 1, then you wanted to change the value to 2, it would translate to the following C code:
+```c
+int main() {
+    int i = 1;
+    i = 2;
 
-## Links
-[Source code deep-dive website for anylizers](https://giona2.github.io/Compiled-Coding-Language/)
+    return 0;
+}
+```
+
+The equivalent Unimal code would look very similar, but you'd need to declare the third line above as a variable reassignment with the keyword, `chng`. Here's an example
+```unimal
+subroutine main::[] -> int :
+    decl i:=[int] = 1
+    chng i = 2
+    
+    expose 0
+;
+```
+
+## Function Declaration
+Functions in unimal are constructed by first using the `subroutine` keyword, followed by the name, the arguments (held between `::[` and `]`), and the return type.  
+*Note*: The inline function block is between `:` and `;`, where the end of a line is created using a newline character  
+Say you needed a function, `add`, that returned the sum of the integers `first` and `second` then returned the result as an integer. This hypothetical situation would translate to the following  
+```unimal
+subroutine add::[int first, int second] -> int:
+    expose first + second
+;
+```
