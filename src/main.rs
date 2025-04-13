@@ -1,5 +1,6 @@
 use std::fs;
 use std::process;
+use std::env;
 
 
 mod tokenizer;
@@ -19,8 +20,11 @@ mod data;
 
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let file_path = args[1].clone();
+
     // Read from file and flatten it
-    let file_content: String = fs::read_to_string("./examples/main.uml")
+    let file_content: String = fs::read_to_string(file_path)
         .expect("Failed to read file");
     let mut optimizer = Optimizer::init();
     optimizer.generate_optimized_content(&file_content);
