@@ -32,8 +32,9 @@ subroutine main::[] -> int :
 ```
 
 ## Function Declaration
+*Note: The inline function block is between `:` and `;`, where the end of a line is created using a newline character*  
+
 Functions in unimal are constructed by first using the `subroutine` keyword, followed by the name, the arguments (held between `::[` and `]`), and the return type.  
-*Note*: The inline function block is between `:` and `;`, where the end of a line is created using a newline character  
 Say you needed a function, `add`, that returned the sum of the integers `first` and `second` then returned the result as an integer. This hypothetical situation would translate to the following  
 ```unimal
 subroutine add::[int first, int second] -> int:
